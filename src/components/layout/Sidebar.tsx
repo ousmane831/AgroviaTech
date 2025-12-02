@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import Logo from "../../../assets/logo_agrotech.png";
 import {
   LayoutDashboard,
   MapPin,
@@ -61,16 +62,20 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Logo et titre */}
-          <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
-              <Leaf className="h-6 w-6 text-sidebar-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">AgroviaTech</h1>
-              <p className="text-xs text-sidebar-foreground/70">Gestion Agricole</p>
-            </div>
-          </div>
+
+         {/* Logo et titre */}
+<div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
+
+  {/* Logo */}
+  <div className="h-18 w-18 overflow-hidden rounded-md bg-transparent">
+    <img
+      src={Logo}
+      alt="Logo AgroviaTech"
+      className="h-full w-full object-cover"
+    />
+  </div>
+</div>
+
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
