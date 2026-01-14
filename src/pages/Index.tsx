@@ -6,6 +6,7 @@ import { ParcelleCard } from '@/components/dashboard/ParcelleCard';
 import { RecolteChart } from '@/components/dashboard/RecolteChart';
 import { PertesChart } from '@/components/dashboard/PertesChart';
 import { PredictionCard } from '@/components/dashboard/PredictionCard';
+import { DashboardVoiceAssistant } from '@/components/dashboard/DashboardVoiceAssistant';
 import { Button } from '@/components/ui/button';
 import {
   parcelles,
@@ -159,6 +160,11 @@ const Index = () => {
           ))}
         </div>
       </section>
+      
+      {/* Assistant Vocal */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <DashboardVoiceAssistant />
+      </div>
     </MainLayout>
   );
 };
