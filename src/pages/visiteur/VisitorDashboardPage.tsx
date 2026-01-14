@@ -28,6 +28,7 @@ import {
 
 // Données de démonstration pour les statistiques publiques
 const mockPublicStats: PublicStats[] = [
+  // Dakar
   {
     id: '1',
     titre: 'Arrachides',
@@ -42,18 +43,6 @@ const mockPublicStats: PublicStats[] = [
   },
   {
     id: '2',
-    titre: 'Maïs',
-    prix: 410,
-    unite: 'FCFA/KG',
-    description: 'Prix moyen du maïs sec',
-    categorie: 'agricol',
-    region: 'Thiès',
-    annee: 2024,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: '3',
     titre: 'Tomates',
     prix: 600,
     unite: 'FCFA/KG',
@@ -65,13 +54,221 @@ const mockPublicStats: PublicStats[] = [
     updated_at: new Date().toISOString()
   },
   {
+    id: '3',
+    titre: 'Mil',
+    prix: 380,
+    unite: 'FCFA/KG',
+    description: 'Mil local – prix moyen saisonnier',
+    categorie: 'agricol',
+    region: 'Dakar',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
     id: '4',
+    titre: 'Carottes',
+    prix: 450,
+    unite: 'FCFA/KG',
+    description: 'Carottes fraîches – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Dakar',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  // Thiès
+  {
+    id: '5',
+    titre: 'Maïs',
+    prix: 410,
+    unite: 'FCFA/KG',
+    description: 'Prix moyen du maïs sec',
+    categorie: 'agricol',
+    region: 'Thiès',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '6',
     titre: 'Oignons',
     prix: 480,
     unite: 'FCFA/KG',
     description: 'Oignons locaux – prix moyen saisonnier',
     categorie: 'marechaire',
     region: 'Thiès',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '7',
+    titre: 'Sorgho',
+    prix: 350,
+    unite: 'FCFA/KG',
+    description: 'Sorgho local – prix moyen',
+    categorie: 'agricol',
+    region: 'Thiès',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '8',
+    titre: 'Poivrons',
+    prix: 520,
+    unite: 'FCFA/KG',
+    description: 'Poivrons frais – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Thiès',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  // Kédougou
+  {
+    id: '9',
+    titre: 'Riz',
+    prix: 550,
+    unite: 'FCFA/KG',
+    description: 'Riz local – prix moyen',
+    categorie: 'agricol',
+    region: 'Kédougou',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '10',
+    titre: 'Aubergines',
+    prix: 420,
+    unite: 'FCFA/KG',
+    description: 'Aubergines fraîches – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Kédougou',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '11',
+    titre: 'Niébé',
+    prix: 480,
+    unite: 'FCFA/KG',
+    description: 'Niébé local – prix moyen',
+    categorie: 'agricol',
+    region: 'Kédougou',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '12',
+    titre: 'Concombres',
+    prix: 380,
+    unite: 'FCFA/KG',
+    description: 'Concombres frais – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Kédougou',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  // Saint-Louis
+  {
+    id: '13',
+    titre: 'Blé',
+    prix: 620,
+    unite: 'FCFA/KG',
+    description: 'Blé local – prix moyen',
+    categorie: 'agricol',
+    region: 'Saint-Louis',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '14',
+    titre: 'Laitues',
+    prix: 320,
+    unite: 'FCFA/KG',
+    description: 'Laitues fraîches – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Saint-Louis',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '15',
+    titre: 'Haricots',
+    prix: 580,
+    unite: 'FCFA/KG',
+    description: 'Haricots secs – prix moyen',
+    categorie: 'agricol',
+    region: 'Saint-Louis',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '16',
+    titre: 'Choux',
+    prix: 280,
+    unite: 'FCFA/KG',
+    description: 'Choux frais – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Saint-Louis',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  // Matam
+  {
+    id: '17',
+    titre: 'Arachides',
+    prix: 560,
+    unite: 'FCFA/KG',
+    description: 'Arachides locales – prix moyen',
+    categorie: 'agricol',
+    region: 'Matam',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '18',
+    titre: 'Courgettes',
+    prix: 340,
+    unite: 'FCFA/KG',
+    description: 'Courgettes fraîches – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Matam',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '19',
+    titre: 'Sésame',
+    prix: 720,
+    unite: 'FCFA/KG',
+    description: 'Sésame local – prix moyen',
+    categorie: 'agricol',
+    region: 'Matam',
+    annee: 2024,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '20',
+    titre: 'Betteraves',
+    prix: 460,
+    unite: 'FCFA/KG',
+    description: 'Betteraves fraîches – production maraîchère',
+    categorie: 'marechaire',
+    region: 'Matam',
     annee: 2024,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -151,24 +348,27 @@ const VisitorDashboardPage = () => {
 
       {/* Statistiques principales */}
       <section className="mb-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = getIconForStat(stat.categorie);
-            const filteredStats = stats.filter(stat => stat.region === selectedRegion);
+        {(() => {
+          const filteredStats = stats.filter(stat => stat.region === selectedRegion);
+          return (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {filteredStats.map((stat) => {
+                const Icon = getIconForStat(stat.categorie);
 
-            return (
-              <StatCard
-              title={stat.titre}
-              value={`${stat.prix.toLocaleString('fr-FR')} ${stat.unite}`}
-              subtitle={`Mis à jour: ${new Date(stat.updated_at).toLocaleTimeString()}`}
-              icon={Icon}
-              annee={stat.annee}
-              variant={getVariantForStat(stat.categorie)}
-            />
-
-            );
-          })}
-        </div>
+                return (
+                  <StatCard
+                    title={stat.titre}
+                    value={`${stat.prix.toLocaleString('fr-FR')} ${stat.unite}`}
+                    subtitle={`Mis à jour: ${new Date(stat.updated_at).toLocaleTimeString()}`}
+                    icon={Icon}
+                    annee={stat.annee}
+                    variant={getVariantForStat(stat.categorie)}
+                  />
+                );
+              })}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Section Introduction */}
