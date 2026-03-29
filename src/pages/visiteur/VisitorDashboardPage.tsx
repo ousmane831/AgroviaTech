@@ -452,22 +452,7 @@ const VisitorDashboardPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <MapPin className="h-6 w-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold mb-2">Carte</h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Vue d'ensemble des zones agricoles
-              </p>
-              <Button size="sm" className="w-full" onClick={() => navigate('/visitor/carte')}>
-                Explorer la carte
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
-
+          
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
