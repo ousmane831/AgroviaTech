@@ -1,11 +1,14 @@
 export type UserRole = 'ADMIN' | 'AGRICULTEUR' | 'VISITEUR';
 
+export type AccountStatus = 'pending' | 'approved' | 'rejected';
+
 export interface User {
   id: string;
   nom: string;
   prenom: string;
   email: string;
   role: UserRole;
+  account_status?: AccountStatus;
   telephone?: string;
   adresse?: string;
   region?: string;
@@ -67,14 +70,25 @@ export const ROLE_PERMISSIONS: RoutePermissions = {
     '/agriculteur/alerts',
     '/agriculteur/statistics',
     '/agriculteur/profile',
-    '/agriculteur/settings'
+    '/agriculteur/settings',
+    '/parcelles',
+    '/recoltes',
+    '/statistiques',
+    '/alertes',
+    '/predictions',
+    '/parametres',
+    '/visitor/market',
+    '/visitor/market/harvest',
+    '/visitor/market/buyer',
+    '/visitor/market/matches'
   ],
   VISITEUR: [
     '/visitor/dashboard',
-    '/visitor/actualites',
-    '/visitor/apprendre',
-    '/visitor/carte',
-    '/visitor/demo-ia'
+    '/visitor/market',
+    '/visitor/demande-agriculteur',
+    '/visitor/market/harvest',
+    '/visitor/market/buyer',
+    '/visitor/market/matches'
   ]
 };
 

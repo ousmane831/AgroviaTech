@@ -13,16 +13,18 @@ import {
   Menu,
   X,
   Leaf,
+  ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Navigation items pour AgroviaTech
+// Navigation items pour AgroviaTech - Espace agriculteur
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
-  { path: '/parcelles', icon: MapPin, label: 'Parcelles' },
-  { path: '/recoltes', icon: Wheat, label: 'Récoltes' },
-  { path: '/statistiques', icon: TrendingUp, label: 'Statistiques' },
-  { path: '/alertes', icon: Bell, label: 'Alertes' },
+  { path: '/agriculteur/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
+  { path: '/agriculteur/parcels', icon: MapPin, label: 'Parcelles' },
+  { path: '/agriculteur/harvests', icon: Wheat, label: 'Récoltes' },
+  { path: '/agriculteur/statistics', icon: TrendingUp, label: 'Statistiques' },
+  { path: '/agriculteur/alerts', icon: Bell, label: 'Alertes' },
+  { path: '/visitor/market', icon: ShoppingBag, label: 'AgroviaMarket' },
   { path: '/predictions', icon: Brain, label: 'Prédictions IA' },
 ];
 
@@ -56,7 +58,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 transform bg-gradient-to-b from-green-600 to-green-700 border-r border-green-800 transition-transform duration-300 ease-in-out lg:translate-x-0',
+          'fixed left-0 top-0 z-40 h-screen w-64 transform bg-gradient-to-b from-primary to-primary/90 border-r border-primary/20 transition-transform duration-300 ease-in-out lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           className
         )}
@@ -64,9 +66,9 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="flex h-full flex-col">
 
          {/* Logo et titre */}
-          <div className="flex h-16 items-center gap-3 border-b border-green-800 px-6">
+          <div className="flex h-16 items-center gap-3 border-b border-primary/20 px-6">
             {/* Logo */}
-            <div className="h-10 w-10 overflow-hidden rounded-md bg-white/20">
+            <div className="h-10 w-10 overflow-hidden rounded-md bg-white/20 shadow-glow">
               <img
                 src={Logo}
                 alt="Logo AgroviaTech"
@@ -75,7 +77,7 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-white">AgroviaTech</span>
-              <span className="text-xs text-green-100">Espace Agriculteur</span>
+              <span className="text-xs text-primary-foreground/70">Espace Agriculteur</span>
             </div>
           </div>
 
@@ -89,10 +91,10 @@ export function Sidebar({ className }: SidebarProps) {
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover-lift',
                     isActive
                       ? 'bg-white/20 text-white shadow-sm'
-                      : 'text-green-100 hover:bg-white/10 hover:text-white'
+                      : 'text-primary-foreground/80 hover:bg-white/10 hover:text-white'
                   )
                 }
               >
@@ -103,27 +105,27 @@ export function Sidebar({ className }: SidebarProps) {
           </nav>
 
           {/* Footer avec paramètres */}
-          <div className="border-t border-green-800 p-3">
+          <div className="border-t border-primary/20 p-3">
             <NavLink
               to="/parametres"
               onClick={() => setIsOpen(false)}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover-lift',
                   isActive
                     ? 'bg-white/20 text-white shadow-sm'
-                    : 'text-green-100 hover:bg-white/10 hover:text-white'
+                    : 'text-primary-foreground/80 hover:bg-white/10 hover:text-white'
                 )
               }
             >
               <Settings className="h-5 w-5" />
               Paramètres
             </NavLink>
-            <div className="mt-4 rounded-lg bg-white/10 p-3">
-              <p className="text-xs text-white">
+            <div className="mt-4 rounded-lg bg-white/10 p-3 backdrop-blur-sm">
+              <p className="text-xs text-white font-medium">
                 Mode Démonstration
               </p>
-              <p className="text-xs font-medium text-green-100">
+              <p className="text-xs text-primary-foreground/70">
                 Données simulées actives
               </p>
             </div>

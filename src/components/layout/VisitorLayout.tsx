@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { VisitorSidebar } from './VisitorSidebar';
 import { Header } from './Header';
-import { Clock } from 'lucide-react';
+import { Clock, TrendingUp } from 'lucide-react';
 
 interface VisitorLayoutProps {
   children: ReactNode;
@@ -11,28 +11,26 @@ interface VisitorLayoutProps {
 
 export function VisitorLayout({ children, title, subtitle }: VisitorLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+    <div className="min-h-screen bg-[#f3f1ee] relative overflow-hidden">
       <VisitorSidebar />
 
-      <div className="lg:ml-64">
+      <div className="lg:ml-64 relative z-10">
         <Header title={title} subtitle={subtitle} />
 
-        <main className="p-4 lg:p-6">
-          {/* Badge Marché */}
-          <div className="mb-6 bg-green-100 border border-green-200 rounded-lg p-3 flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+        <main className="animate-fade-in px-6 pb-8 pt-5 lg:px-8">
+          <div className="mb-7 flex items-center justify-between gap-3 rounded-[18px] border border-[#2e5a3b]/50 bg-white/85 px-5 py-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-3.5 w-3.5 rounded-full bg-[#2ea75c] shadow-[0_0_0_4px_rgba(46,167,92,0.15)]" />
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-[#1d4d2d]" />
+                <span className="text-[1.05rem] font-semibold text-[#1d2a22]">Marché agricole</span>
+              </div>
+              <span className="text-[0.95rem] text-[#5d665e]">• Prix des cultures mis à jour en temps réel</span>
+            </div>
 
-            <span className="text-sm text-green-800 font-semibold">
-              Marché agricole
-            </span>
-
-            <span className="text-xs text-green-700">
-              • Prix des cultures mis à jour en temps réel
-            </span>
-
-            <div className="ml-auto flex items-center gap-1 text-xs text-green-600">
-              <Clock size={14} />
-              <span>Mise à jour continue</span>
+            <div className="hidden items-center gap-2 text-[0.85rem] text-[#4c5a52] sm:flex">
+              <Clock size={14} className="text-[#1d4d2d]" />
+              <span>Mis à jour à 08:24:28</span>
             </div>
           </div>
 

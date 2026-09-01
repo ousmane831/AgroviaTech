@@ -110,7 +110,8 @@ export default {
       boxShadow: {
         "card": "0 4px 6px -1px hsl(var(--foreground) / 0.08), 0 2px 4px -2px hsl(var(--foreground) / 0.05)",
         "card-hover": "0 10px 15px -3px hsl(var(--foreground) / 0.1), 0 4px 6px -4px hsl(var(--foreground) / 0.05)",
-        "glow": "0 0 20px hsl(var(--primary) / 0.15)",
+        "glow": "0 0 30px hsl(var(--primary) / 0.2)",
+        "xl": "0 20px 25px -5px hsl(var(--foreground) / 0.1), 0 8px 10px -6px hsl(var(--foreground) / 0.05)",
       },
     },
   },

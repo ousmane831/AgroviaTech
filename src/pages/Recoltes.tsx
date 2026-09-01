@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { RecolteForm } from '@/components/forms/RecolteForm';
 import { Button } from '@/components/ui/button';
@@ -12,25 +12,40 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { recoltes as initialRecoltes, parcelles, Recolte } from '@/data/mockData';
+import { recoltes as initialRecoltes, parcelles, type Recolte } from '@/data/mockData';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { createRecolte, deleteRecolte, fetchRecoltes, updateRecolte } from '@/lib/agricultureApi';
 
-/**
- * Page de gestion des récoltes
- * Affiche l'historique des récoltes avec possibilité d'ajout et modification
- */
 const Recoltes = () => {
   const [recoltesList, setRecoltesList] = useState<Recolte[]>(initialRecoltes);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedRecolte, setSelectedRecolte] = useState<Recolte | undefined>();
 
-  // Obtenir le nom de la parcelle
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRecoltes = async () => {
+      try {
+        const data = await fetchRecoltes();
+        if (isMounted) {
+          setRecoltesList(data.length > 0 ? data : initialRecoltes);
+        }
+      } catch {
+        if (isMounted) setRecoltesList(initialRecoltes);
+      }
+    };
+
+    void loadRecoltes();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const getParcelleName = (parcelleId: string) => {
     return parcelles.find((p) => p.id === parcelleId)?.nom || 'Parcelle inconnue';
   };
 
-  // Formater la date
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: 'numeric',
@@ -39,7 +54,6 @@ const Recoltes = () => {
     });
   };
 
-  // Formater les quantités
   const formatQuantity = (kg: number) => {
     if (kg >= 1000) {
       return `${(kg / 1000).toFixed(1)} T`;
@@ -47,33 +61,56 @@ const Recoltes = () => {
     return `${kg.toLocaleString('fr-FR')} kg`;
   };
 
-  // Gérer l'ajout/modification
-  const handleSubmitRecolte = (data: Partial<Recolte>) => {
-    if (selectedRecolte) {
-      setRecoltesList((prev) =>
-        prev.map((r) =>
-          r.id === selectedRecolte.id ? { ...r, ...data } as Recolte : r
-        )
+  const handleSubmitRecolte = async (data: Partial<Recolte>) => {
+    try {
+      if (selectedRecolte) {
+        const updated = await updateRecolte(selectedRecolte.id, data);
+        const merged = {
+          ...selectedRecolte,
+          ...data,
+          id: String(updated?.id ?? selectedRecolte.id),
+        } as Recolte;
+
+        setRecoltesList((prev) =>
+          prev.map((r) => (r.id === selectedRecolte.id ? merged : r))
+        );
+      } else {
+        const created = await createRecolte(data);
+        const newRecolte = {
+          ...data,
+          id: String(created?.id ?? `r${Date.now()}`),
+          date: data.date || new Date().toISOString().split('T')[0],
+          quantiteStockee: Number(data.quantiteStockee ?? 0),
+          pertes: Number(data.pertes ?? 0),
+        } as Recolte;
+
+        setRecoltesList((prev) => [...prev, newRecolte]);
+      }
+
+      setSelectedRecolte(undefined);
+      setIsFormOpen(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Erreur lors de l’enregistrement de la récolte'
       );
-    } else {
-      setRecoltesList((prev) => [...prev, data as Recolte]);
     }
-    setSelectedRecolte(undefined);
   };
 
-  // Supprimer une récolte
-  const handleDeleteRecolte = (id: string) => {
-    setRecoltesList((prev) => prev.filter((r) => r.id !== id));
-    toast.success('Récolte supprimée');
+  const handleDeleteRecolte = async (id: string) => {
+    try {
+      await deleteRecolte(id);
+      setRecoltesList((prev) => prev.filter((r) => r.id !== id));
+      toast.success('Récolte supprimée');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erreur lors de la suppression');
+    }
   };
 
-  // Ouvrir le formulaire d'édition
   const handleEditRecolte = (recolte: Recolte) => {
     setSelectedRecolte(recolte);
     setIsFormOpen(true);
   };
 
-  // Couleurs par qualité
   const qualiteBadgeVariant = (qualite: string) => {
     switch (qualite) {
       case 'excellente':
@@ -89,7 +126,6 @@ const Recoltes = () => {
     }
   };
 
-  // Calculer les totaux
   const totaux = recoltesList.reduce(
     (acc, r) => ({
       recoltee: acc.recoltee + r.quantiteRecoltee,
@@ -104,7 +140,6 @@ const Recoltes = () => {
       title="Récoltes"
       subtitle={`${recoltesList.length} récoltes enregistrées`}
     >
-      {/* Statistiques rapides */}
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -144,7 +179,6 @@ const Recoltes = () => {
         </Card>
       </div>
 
-      {/* Bouton d'ajout */}
       <div className="mb-4 flex justify-end">
         <Button
           onClick={() => {
@@ -158,7 +192,6 @@ const Recoltes = () => {
         </Button>
       </div>
 
-      {/* Tableau des récoltes */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -224,7 +257,6 @@ const Recoltes = () => {
         </CardContent>
       </Card>
 
-      {/* Formulaire */}
       <RecolteForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
