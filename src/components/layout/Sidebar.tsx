@@ -41,16 +41,16 @@ export function Sidebar({ className }: SidebarProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="fixed left-3 top-3 z-50 rounded-full border border-primary/20 bg-white/90 text-primary shadow-sm lg:hidden"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
       {/* Overlay mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -58,8 +58,8 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 transform bg-gradient-to-b from-primary to-primary/90 border-r border-primary/20 transition-transform duration-300 ease-in-out lg:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
+          'fixed left-0 top-0 z-40 h-screen w-[82vw] max-w-[280px] transform bg-gradient-to-b from-primary to-primary/90 border-r border-primary/20 transition-transform duration-300 ease-in-out lg:w-64 lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           className
         )}
       >
@@ -121,14 +121,7 @@ export function Sidebar({ className }: SidebarProps) {
               <Settings className="h-5 w-5" />
               Paramètres
             </NavLink>
-            <div className="mt-4 rounded-lg bg-white/10 p-3 backdrop-blur-sm">
-              <p className="text-xs text-white font-medium">
-                Mode Démonstration
-              </p>
-              <p className="text-xs text-primary-foreground/70">
-                Données simulées actives
-              </p>
-            </div>
+            
           </div>
         </div>
       </aside>

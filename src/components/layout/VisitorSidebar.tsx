@@ -49,16 +49,16 @@ export function VisitorSidebar({ className }: VisitorSidebarProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="fixed left-3 top-3 z-50 rounded-full border border-white/20 bg-[#1e5a36] text-white shadow-lg lg:hidden"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
       {/* Overlay mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -66,8 +66,8 @@ export function VisitorSidebar({ className }: VisitorSidebarProps) {
       {/* Sidebar Visiteur */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-[260px] transform bg-[#1e5a36] border-r border-[#234b2f] transition-transform duration-300 ease-in-out lg:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
+          'fixed left-0 top-0 z-40 h-screen w-[82vw] max-w-[280px] transform bg-[#1e5a36] border-r border-[#234b2f] transition-transform duration-300 ease-in-out lg:w-[260px] lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           className
         )}
       >

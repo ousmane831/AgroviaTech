@@ -10,9 +10,9 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-surface relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-surface relative overflow-x-hidden">
       {/* Decorative circles */}
-      <div className="decorative-circles">
+      <div className="decorative-circles hidden md:block">
         <div className="decorative-circle green animate-float" style={{ width: '350px', height: '350px', top: '5%', right: '10%' }} />
         <div className="decorative-circle grey animate-pulse-glow" style={{ width: '250px', height: '250px', bottom: '15%', left: '8%' }} />
         <div className="decorative-circle accent animate-float" style={{ width: '180px', height: '180px', top: '40%', left: '5%', animationDelay: '3s' }} />
@@ -20,9 +20,9 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
       </div>
 
       <Sidebar />
-      <div className="lg:ml-64 relative z-10">
+      <div className="relative z-10 lg:ml-64">
         <Header title={title} subtitle={subtitle} />
-        <main className="p-4 lg:p-8 animate-fade-in">{children}</main>
+        <main className="animate-fade-in px-3 pb-6 pt-4 sm:px-4 lg:px-8">{children}</main>
       </div>
     </div>
   );

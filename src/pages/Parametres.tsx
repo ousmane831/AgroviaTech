@@ -30,27 +30,7 @@ const Parametres = () => {
       title="Paramètres"
       subtitle="Configuration de votre application AgroviaTech"
     >
-      {/* Informations sur le mode démo */}
-      <Card className="mb-6 border-primary/30 bg-primary/5">
-        <CardContent className="flex items-start gap-4 py-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-            <Info className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-foreground">Mode Démonstration</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cette application fonctionne avec des données simulées pour la présentation au jury.
-              Toutes les parcelles, récoltes, alertes et prédictions IA sont générées automatiquement.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge variant="secondary">5 parcelles</Badge>
-              <Badge variant="secondary">3 mois d'historique</Badge>
-              <Badge variant="secondary">Alertes simulées</Badge>
-              <Badge variant="secondary">Prédictions IA</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+     
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Configuration générale */}
