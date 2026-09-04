@@ -58,10 +58,7 @@ export default function AgroviaMarketHarvestPage() {
       <section className="mb-8 rounded-[24px] border border-[#d5b26b] bg-[#f4f2eb] p-6 shadow-sm">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#e4f2e8] px-3 py-1 text-xs font-semibold text-[#1d4d2d]">
-              <Sparkles className="h-3.5 w-3.5" />
-              nouvelle offre
-            </div>
+            
             <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[#1d2a22]">Publiez votre récolte</h2>
           </div>
 

@@ -201,13 +201,7 @@ const AdminDashboardPage = () => {
       title="Tableau de bord Admin"
       subtitle="Gestion système et supervision"
     >
-      {/* Admin badge */}
-      <div className="mb-6 flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary" />
-        <Badge className="bg-primary/10 text-primary">
-          {user?.prenom} {user?.nom} - Admin
-        </Badge>
-      </div>
+  
 
       {/* Statistiques */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -445,59 +439,7 @@ const AdminDashboardPage = () => {
         </CardContent>
       </Card>
 
-      {/* Actions rapides */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="glass-effect hover-lift">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-lg">
-                <Database className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Base de données</h3>
-                <p className="text-sm text-muted-foreground">Sauvegarder et restaurer</p>
-                <Button size="sm" className="mt-2">
-                  Gérer les sauvegardes
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-effect hover-lift">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Statistiques</h3>
-                <p className="text-sm text-muted-foreground">Rapports et analytics</p>
-                <Button size="sm" className="mt-2">
-                  Voir les rapports
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-effect hover-lift">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-lg">
-                <Settings className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Configuration</h3>
-                <p className="text-sm text-muted-foreground">Paramètres système</p>
-                <Button size="sm" className="mt-2">
-                  Accéder aux réglages
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+     
     </MainLayout>
   );
 };

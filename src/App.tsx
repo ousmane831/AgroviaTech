@@ -54,6 +54,10 @@ const ProtectedRoute = ({
   return <>{children}</>;
 };
 
+const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>{children}</ProtectedRoute>
+);
+
 /**
  * Application principale AgroviaTech
  * Solution de gestion agricole avec tableau de bord, parcelles, récoltes,
@@ -69,10 +73,10 @@ const App = () => (
           {/* Routes visiteur - Prioritaires */}
           <Route path="/" element={<VisitorDashboardPage />} />
           <Route path="/visitor/dashboard" element={<VisitorDashboardPage />} />
-          <Route path="/visitor/market" element={<AgroviaMarketPage />} />
-          <Route path="/visitor/market/harvest" element={<AgroviaMarketHarvestPage />} />
-          <Route path="/visitor/market/buyer" element={<AgroviaMarketBuyerPage />} />
-          <Route path="/visitor/market/matches" element={<AgroviaMarketMatchesPage />} />
+          <Route path="/visitor/market" element={<AuthenticatedRoute><AgroviaMarketPage /></AuthenticatedRoute>} />
+          <Route path="/visitor/market/harvest" element={<AuthenticatedRoute><AgroviaMarketHarvestPage /></AuthenticatedRoute>} />
+          <Route path="/visitor/market/buyer" element={<AuthenticatedRoute><AgroviaMarketBuyerPage /></AuthenticatedRoute>} />
+          <Route path="/visitor/market/matches" element={<AuthenticatedRoute><AgroviaMarketMatchesPage /></AuthenticatedRoute>} />
           <Route path="/visitor/demande-agriculteur" element={<AgriculteurRequestPage />} />
           
           {/* Authentification */}

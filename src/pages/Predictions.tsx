@@ -28,27 +28,7 @@ const Predictions = () => {
       title="Prédictions IA"
       subtitle="Analyses et recommandations basées sur l'intelligence artificielle"
     >
-      {/* Bannière IA */}
-      <Card className="mb-8 border-info/30 bg-info/5">
-        <CardContent className="flex items-center gap-4 py-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-info/20">
-            <Brain className="h-6 w-6 text-info" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground">
-              Modèle de prédiction AgroviaTech
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Prédictions basées sur les données simulées des 3 derniers mois.
-              Confiance moyenne : {moyenneConfiance.toFixed(0)}%
-            </p>
-          </div>
-          <Badge variant="info" className="ml-auto gap-1">
-            <Sparkles className="h-3 w-3" />
-            Simulé
-          </Badge>
-        </CardContent>
-      </Card>
+     
 
       {/* KPIs des prédictions */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">

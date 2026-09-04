@@ -24,7 +24,6 @@ export function DecorativeLeaf({ className, size = 'md', color = 'green' }: Deco
       className={cn(
         sizeClasses[size],
         colorClasses[color],
-        'animate-float',
         className
       )}
       viewBox="0 0 24 24"

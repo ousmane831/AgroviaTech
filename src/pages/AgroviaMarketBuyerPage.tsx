@@ -52,16 +52,13 @@ export default function AgroviaMarketBuyerPage() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#e4f2e8] px-3 py-1 text-xs font-semibold text-[#1d4d2d]">
-              <Sparkles className="h-3.5 w-3.5" />
+              
               acheteur
             </div>
             <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[#1d2a22]">Déclarez vos besoins</h2>
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#eaf5ec] px-3 py-2 text-sm text-[#1d4d2d]">
-            <BadgeCheck className="h-4 w-4" />
-            Matching intelligent avec les producteurs
-          </div>
+         
         </div>
       </section>
 

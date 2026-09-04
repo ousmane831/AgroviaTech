@@ -308,15 +308,19 @@ const VisitorDashboardPage = () => {
       title="Dashboard Public"
       subtitle="Statistiques agricoles anonymisées et tendances du secteur"
     >
-      <div className="mb-7 flex items-center justify-start gap-3">
-        <label htmlFor="region" className="text-[1.05rem] font-medium text-[#1d2a22]">
-          Région :
+      <div className="mb-7 flex flex-col gap-3 rounded-xl border border-[#dfe5df] bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div>
+          <p className="text-sm font-semibold text-[#1d2a22]">Prix agricoles par région</p>
+          <p className="mt-1 text-xs text-[#69756d]">Consultez les indicateurs disponibles pour votre zone.</p>
+        </div>
+        <label htmlFor="region" className="text-sm font-medium text-[#1d2a22]">
+          Région
         </label>
         <select
           id="region"
           value={selectedRegion}
           onChange={(e) => setSelectedRegion(e.target.value)}
-          className="min-w-[140px] rounded-lg border border-[#d9dfe0] bg-[#f6f5f3] px-3 py-2 text-[0.95rem] text-[#1d2a22] focus:outline-none focus:ring-2 focus:ring-[#2d5f3a]"
+          className="min-w-[160px] rounded-lg border border-[#cfd9d2] bg-[#f8faf8] px-3 py-2 text-sm text-[#1d2a22] focus:outline-none focus:ring-2 focus:ring-[#2d5f3a]"
         >
           {regions.map((region) => (
             <option key={region} value={region}>
@@ -356,15 +360,15 @@ const VisitorDashboardPage = () => {
         })()}
       </section>
 
-      <section className="animate-slide-up rounded-[22px] border-[2px] border-[#d5b26b] bg-[#f4f2eb] p-6 shadow-sm">
+      <section className="animate-slide-up rounded-2xl border border-[#dfe5df] bg-white p-5 shadow-sm sm:p-7">
         <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d9b067] text-[#1f3b2c] shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#e7f1e8] text-[#1f5a35]">
             <Leaf className="h-5 w-5" />
           </div>
-          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[#1d2a22]">Bienvenue sur AgroviaTech</h2>
+          <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[#1d2a22]">Bienvenue sur AgroviaTech</h2>
         </div>
 
-        <p className="mb-6 max-w-[1200px] text-[1.05rem] leading-relaxed text-[#2a322d]">
+        <p className="mb-6 max-w-[1200px] text-base leading-relaxed text-[#4e5b55]">
           Découvrez comment la technologie transforme l'agriculture en Afrique. Notre plateforme connecte les agriculteurs,
           optimise les ressources et augmente les rendements grâce à l'IoT et l'intelligence artificielle.
         </p>

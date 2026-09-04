@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import Logo from "../../../assets/logo_agrotech.png";
 import {
   LayoutDashboard,
   ShoppingBag,
-  Leaf,
   BriefcaseBusiness,
   MessageSquareText,
   UserPlus,
@@ -15,12 +14,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisitorMenuItem } from '@/types/visitor';
+import { useAuthComplete } from '@/hooks/useAuthComplete';
 
 // Navigation items pour le rôle visiteur
 const visitorNavItems: VisitorMenuItem[] = [
   { path: '/visitor/dashboard', icon: LayoutDashboard, label: 'Dashboard Public' },
   { path: '/visitor/market', icon: ShoppingBag, label: 'AgroviaMarket' },
-  { path: '/visitor/market/harvest', icon: Leaf, label: 'Déclarer une récolte' },
   { path: '/visitor/market/buyer', icon: BriefcaseBusiness, label: 'Publier un besoin' },
   { path: '/visitor/market/matches', icon: MessageSquareText, label: 'Matchs & négociation' },
 ];
@@ -32,6 +31,25 @@ interface VisitorSidebarProps {
 export function VisitorSidebar({ className }: VisitorSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthComplete();
+
+  const protectedMarketPaths = [
+    '/visitor/market',
+    '/visitor/market/harvest',
+    '/visitor/market/buyer',
+    '/visitor/market/matches',
+  ];
+
+  const handleNavigation = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (!isAuthenticated && protectedMarketPaths.includes(path)) {
+      event.preventDefault();
+      setIsOpen(false);
+      navigate('/login', { state: { from: path } });
+      return;
+    }
+
+    setIsOpen(false);
+  };
 
   const handleDevenirAgriculteur = () => {
     navigate('/login');
@@ -92,10 +110,10 @@ export function VisitorSidebar({ className }: VisitorSidebarProps) {
               <NavLink
                 key={item.path}
                 to={item.path}
-                onClick={() => setIsOpen(false)}
+                onClick={(event) => handleNavigation(event, item.path)}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-3 text-[0.98rem] font-medium transition-all duration-200 relative',
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-[0.98rem] font-medium transition-colors duration-200 relative',
                     isActive
                       ? 'bg-[#f3f7f2] text-[#1d4d2d] shadow-sm'
                       : 'text-[#edf6ee] hover:bg-white/10 hover:text-white'
@@ -115,7 +133,7 @@ export function VisitorSidebar({ className }: VisitorSidebarProps) {
 
           <div className="border-t border-[#2a6a42] p-3 space-y-2">
             <Button
-              className="w-full justify-start gap-2 rounded-xl bg-white text-[#1d4d2d] hover:bg-[#edf6ee] shadow-lg transition-all duration-200"
+              className="w-full justify-start gap-2 rounded-lg bg-white text-[#1d4d2d] hover:bg-[#edf6ee] shadow-sm transition-colors duration-200"
               onClick={handleDevenirAgriculteur}
             >
               <UserPlus className="h-4 w-4" />
@@ -131,10 +149,7 @@ export function VisitorSidebar({ className }: VisitorSidebarProps) {
               <span className="font-medium">Se Connecter</span>
             </Button>
 
-            <div className="rounded-xl bg-[#f1f8f3]/10 p-3 backdrop-blur-sm">
-              <p className="text-xs font-medium text-white">Mode Visiteur</p>
-              <p className="text-[0.7rem] text-[#dfeee2]">Accès public limité</p>
-            </div>
+            
           </div>
         </div>
       </aside>

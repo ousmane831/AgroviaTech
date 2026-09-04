@@ -58,7 +58,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-[82vw] max-w-[280px] transform bg-gradient-to-b from-primary to-primary/90 border-r border-primary/20 transition-transform duration-300 ease-in-out lg:w-64 lg:translate-x-0',
+          'fixed left-0 top-0 z-40 h-screen w-[82vw] max-w-[280px] transform bg-primary border-r border-primary/20 transition-transform duration-300 ease-in-out lg:w-64 lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           className
         )}
@@ -68,7 +68,7 @@ export function Sidebar({ className }: SidebarProps) {
          {/* Logo et titre */}
           <div className="flex h-16 items-center gap-3 border-b border-primary/20 px-6">
             {/* Logo */}
-            <div className="h-10 w-10 overflow-hidden rounded-md bg-white/20 shadow-glow">
+              <div className="h-10 w-10 overflow-hidden rounded-md bg-white/20 shadow-sm">
               <img
                 src={Logo}
                 alt="Logo AgroviaTech"
