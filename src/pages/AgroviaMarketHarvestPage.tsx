@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VisitorLayout } from '@/components/layout/VisitorLayout';
+import { useAuthComplete } from '@/hooks/useAuthComplete';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ const defaultForm = {
 
 export default function AgroviaMarketHarvestPage() {
   const navigate = useNavigate();
+  const { user } = useAuthComplete();
   const [form, setForm] = useState(defaultForm);
 
   const handleChange = (field: keyof typeof defaultForm, value: string) => {
@@ -34,9 +36,10 @@ export default function AgroviaMarketHarvestPage() {
 
   const handleSubmit = () => {
     const offers = getHarvestOffers();
+    const farmerName = `${user?.prenom || ''} ${user?.nom || ''}`.trim() || user?.email || 'Agriculteur';
     const nextOffer: HarvestOffer = {
       id: `offer-${Date.now()}`,
-      farmerName: 'Vous',
+      farmerName,
       region: form.localisation,
       crop: form.culture,
       quantity: Number(form.quantite) || 0,

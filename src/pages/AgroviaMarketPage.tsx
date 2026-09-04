@@ -2,6 +2,7 @@ import { VisitorLayout } from '@/components/layout/VisitorLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { useAuthComplete } from '@/hooks/useAuthComplete';
 import {
   ArrowRight,
   BadgeCheck,
@@ -61,6 +62,8 @@ const steps = [
 
 export default function AgroviaMarketPage() {
   const navigate = useNavigate();
+  const { user } = useAuthComplete();
+  const isFarmer = user?.role === 'AGRICULTEUR';
 
   return (
     <VisitorLayout
@@ -80,11 +83,11 @@ export default function AgroviaMarketPage() {
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row lg:flex-col">
-            <Button onClick={() => navigate('/visitor/market/harvest')} className="rounded-lg bg-[#1d4d2d] text-white hover:bg-[#163d27]">
-              Déclarer une récolte
+            <Button onClick={() => navigate(isFarmer ? '/visitor/market/harvest' : '/visitor/market/buyer')} className="rounded-lg bg-[#1d4d2d] text-white hover:bg-[#163d27]">
+              {isFarmer ? 'Publier une récolte' : 'Publier un besoin'}
             </Button>
-            <Button onClick={() => navigate('/visitor/market/buyer')} variant="outline" className="rounded-lg border-[#1d4d2d] bg-white text-[#1d4d2d] hover:bg-[#edf7ef]">
-              Publier un besoin
+            <Button onClick={() => navigate('/visitor/market/matches')} variant="outline" className="rounded-lg border-[#1d4d2d] bg-white text-[#1d4d2d] hover:bg-[#edf7ef]">
+              Voir les correspondances
             </Button>
           </div>
         </div>

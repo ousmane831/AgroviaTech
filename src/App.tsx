@@ -73,10 +73,10 @@ const App = () => (
           {/* Routes visiteur - Prioritaires */}
           <Route path="/" element={<VisitorDashboardPage />} />
           <Route path="/visitor/dashboard" element={<VisitorDashboardPage />} />
-          <Route path="/visitor/market" element={<AuthenticatedRoute><AgroviaMarketPage /></AuthenticatedRoute>} />
-          <Route path="/visitor/market/harvest" element={<AuthenticatedRoute><AgroviaMarketHarvestPage /></AuthenticatedRoute>} />
-          <Route path="/visitor/market/buyer" element={<AuthenticatedRoute><AgroviaMarketBuyerPage /></AuthenticatedRoute>} />
-          <Route path="/visitor/market/matches" element={<AuthenticatedRoute><AgroviaMarketMatchesPage /></AuthenticatedRoute>} />
+          <Route path="/visitor/market" element={<ProtectedRoute allowedRoles={['AGRICULTEUR', 'VISITEUR']}><AgroviaMarketPage /></ProtectedRoute>} />
+          <Route path="/visitor/market/harvest" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><AgroviaMarketHarvestPage /></ProtectedRoute>} />
+          <Route path="/visitor/market/buyer" element={<ProtectedRoute allowedRoles={['VISITEUR']}><AgroviaMarketBuyerPage /></ProtectedRoute>} />
+          <Route path="/visitor/market/matches" element={<ProtectedRoute allowedRoles={['AGRICULTEUR', 'VISITEUR']}><AgroviaMarketMatchesPage /></ProtectedRoute>} />
           <Route path="/visitor/demande-agriculteur" element={<AgriculteurRequestPage />} />
           
           {/* Authentification */}
