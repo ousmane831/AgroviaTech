@@ -1,28 +1,65 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VisitorLayout } from '@/components/layout/VisitorLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { computeMarketMatches } from '@/data/agroviamarket';
-import { ArrowRight, BadgeCheck, CalendarDays, MapPin, MessageSquareText, PackageCheck, Scale, Send, X } from 'lucide-react';
+import type { MarketMatch } from '@/data/agroviamarket';
+import { createMarketNegotiation, fetchMarketMatches } from '@/lib/marketApi';
+import { useNavigate } from 'react-router-dom';
+import { useAuthComplete } from '@/hooks/useAuthComplete';
+import { BadgeCheck, CalendarDays, MapPin, MessageSquareText, PackageCheck, Phone, Scale } from 'lucide-react';
 
-const matches = computeMarketMatches();
-const averageScore = matches.length
-  ? Math.round(matches.reduce((total, match) => total + match.score, 0) / matches.length)
-  : 0;
-const negotiationCount = matches.filter((match) => match.status === 'negociation').length;
-const marketWhatsappNumber = import.meta.env.VITE_MARKET_WHATSAPP_NUMBER as string | undefined;
+const getWhatsappUrl = (phone: string | undefined, message: string) => {
+  const digits = phone?.replace(/\D/g, '');
+  return digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : null;
+};
 
 export default function AgroviaMarketMatchesPage() {
-  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  const [message, setMessage] = useState('Bonjour, je souhaite échanger au sujet de cette offre.');
+  const navigate = useNavigate();
+  const { user } = useAuthComplete();
+  const [matches, setMatches] = useState<MarketMatch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const selectedMatch = matches.find((match) => match.id === selectedMatchId);
+  useEffect(() => {
+    const loadMatches = async () => {
+      try {
+        setMatches(await fetchMarketMatches());
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Impossible de charger les correspondances.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const whatsappUrl = selectedMatch && marketWhatsappNumber
-    ? `https://wa.me/${marketWhatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(
-        `${message}\n\nProduit : ${selectedMatch.crop}\nVolume : ${selectedMatch.quantity} kg\nZone : ${selectedMatch.region}`
-      )}`
-    : null;
+    void loadMatches();
+  }, []);
+
+  const averageScore = matches.length
+    ? Math.round(matches.reduce((total, match) => total + match.score, 0) / matches.length)
+    : 0;
+  const negotiationCount = matches.filter((match) => match.status === 'negociation').length;
+
+  const handleContact = async (match: MarketMatch) => {
+    try {
+      await createMarketNegotiation(
+        match.offerId,
+        match.needId,
+        `Contact via AgroviaMarket pour ${match.crop} (${match.quantity} kg, ${match.region}).`
+      );
+    } catch (contactError) {
+      if (!(contactError instanceof Error && contactError.message.includes('existe déjà'))) {
+        setError(contactError instanceof Error ? contactError.message : 'Impossible d’enregistrer la négociation.');
+        return;
+      }
+    }
+
+    const isFarmer = user?.role === 'AGRICULTEUR';
+    const contactName = isFarmer ? match.buyerName : match.farmerName;
+    const contactPhone = isFarmer ? match.buyerPhone : match.farmerPhone;
+    const message = `Bonjour ${contactName}, je vous contacte via AgroviaMarket au sujet de ${match.crop} (${match.quantity} kg, ${match.region}).`;
+    const whatsappUrl = getWhatsappUrl(contactPhone, message);
+    if (whatsappUrl) window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <VisitorLayout
@@ -38,6 +75,8 @@ export default function AgroviaMarketMatchesPage() {
           </p>
         </div>
       </section>
+
+      {error && <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card className="rounded-xl border border-[#dfe5df] bg-white shadow-sm">
@@ -76,12 +115,25 @@ export default function AgroviaMarketMatchesPage() {
       </div>
 
       <div className="space-y-4">
-        {matches.length === 0 ? (
+        {isLoading ? (
+          <Card className="rounded-xl border border-[#dfe5df] bg-white shadow-sm"><CardContent className="py-12 text-center text-sm text-[#69756d]">Chargement des correspondances...</CardContent></Card>
+        ) : matches.length === 0 ? (
           <Card className="rounded-xl border border-dashed border-[#cfd9d2] bg-white shadow-sm">
             <CardContent className="flex flex-col items-center justify-center px-5 py-12 text-center">
               <PackageCheck className="h-10 w-10 text-[#71927b]" />
               <h3 className="mt-4 text-lg font-semibold text-[#1d2a22]">Aucune correspondance pour le moment</h3>
-              <p className="mt-2 max-w-md text-sm text-[#69756d]">Publiez une offre ou un besoin pour créer de nouvelles opportunités commerciales.</p>
+              <p className="mt-2 max-w-md text-sm text-[#69756d]">
+                {user?.role === 'AGRICULTEUR'
+                  ? 'Votre récolte est bien enregistrée. Un acheteur doit publier une demande compatible avec votre produit et votre région.'
+                  : 'Votre demande est bien enregistrée. Un agriculteur doit publier une offre compatible avec votre produit et votre région.'}
+              </p>
+              <Button
+                variant="outline"
+                className="mt-5 rounded-lg border-[#1d4d2d] text-[#1d4d2d]"
+                onClick={() => navigate('/visitor/market')}
+              >
+                Retour au marché
+              </Button>
             </CardContent>
           </Card>
         ) : matches.map((match) => (
@@ -113,62 +165,27 @@ export default function AgroviaMarketMatchesPage() {
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="inline-flex items-center gap-2 text-sm text-[#53615a]"><MessageSquareText className="h-4 w-4 text-[#39714a]" />{match.status === 'match' ? 'Les critères sont alignés.' : 'Une discussion est recommandée.'}</p>
-                <Button
-                  onClick={() => {
-                    setSelectedMatchId(match.id);
-                    setMessage(`Bonjour, je souhaite échanger au sujet de votre offre de ${match.crop}.`);
-                  }}
-                  className="w-full rounded-lg bg-[#1d4d2d] text-white hover:bg-[#163d27] sm:w-auto"
-                >
-                  Ouvrir la négociation
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                {(() => {
+                  const isFarmer = user?.role === 'AGRICULTEUR';
+                  const contactName = isFarmer ? match.buyerName : match.farmerName;
+                  const contactPhone = isFarmer ? match.buyerPhone : match.farmerPhone;
+                  return contactPhone ? (
+                    <Button onClick={() => void handleContact(match)} className="w-full rounded-lg bg-[#1f9d55] text-white hover:bg-[#188447] sm:w-auto">
+                        <Phone className="mr-2 h-4 w-4" />
+                        Contacter {contactName} sur WhatsApp
+                    </Button>
+                  ) : (
+                    <span className="rounded-lg bg-[#f4f7f4] px-3 py-2 text-xs text-[#69756d]">
+                      Numéro WhatsApp non renseigné
+                    </span>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {selectedMatch && (
-        <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-2xl border border-[#cfd9d2] bg-white p-5 shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:mx-0">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#39714a]">Nouvelle négociation</p>
-              <h3 className="mt-1 text-lg font-semibold text-[#1d2a22]">{selectedMatch.crop} avec {selectedMatch.buyerName}</h3>
-              <p className="mt-1 text-sm text-[#69756d]">Votre demande sera associée à cette correspondance.</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setSelectedMatchId(null)} title="Fermer">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <label htmlFor="negotiation-message" className="mt-4 block text-sm font-medium text-[#1d2a22]">Message initial</label>
-          <textarea
-            id="negotiation-message"
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            className="mt-2 min-h-24 w-full resize-y rounded-lg border border-[#cfd9d2] bg-[#f8faf8] px-3 py-2 text-sm text-[#1d2a22] outline-none focus:ring-2 focus:ring-[#39714a]"
-          />
-
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            {whatsappUrl ? (
-              <Button asChild className="rounded-lg bg-[#1f9d55] text-white hover:bg-[#188447]">
-                <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                  <Send className="mr-2 h-4 w-4" />
-                  Continuer sur WhatsApp
-                </a>
-              </Button>
-            ) : (
-              <p className="rounded-lg bg-[#f4f7f4] px-3 py-2 text-xs text-[#69756d]">
-                WhatsApp sera disponible dès que le numéro officiel sera configuré.
-              </p>
-            )}
-            <Button variant="outline" className="rounded-lg border-[#1d4d2d] text-[#1d4d2d]" onClick={() => setSelectedMatchId(null)}>
-              Fermer
-            </Button>
-          </div>
-        </div>
-      )}
     </VisitorLayout>
   );
 }

@@ -116,3 +116,87 @@ class Prediction(models.Model):
     
     def __str__(self):
         return f"Prédiction {self.parcelle.nom} - {self.rendement_prevu} kg/ha"
+
+
+class MarketOffer(models.Model):
+    """Offre de récolte publiée par un agriculteur."""
+
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('reserved', 'Réservée'),
+        ('closed', 'Clôturée'),
+    ]
+    QUALITY_CHOICES = [
+        ('Standard', 'Standard'),
+        ('Premium', 'Premium'),
+        ('Classe A', 'Classe A'),
+    ]
+
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='market_offers')
+    farmer_name = models.CharField(max_length=160)
+    farmer_phone = models.CharField(max_length=30)
+    crop = models.CharField(max_length=120)
+    region = models.CharField(max_length=120)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    quality = models.CharField(max_length=30, choices=QUALITY_CHOICES)
+    available_date = models.DateField()
+    price_indicative = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class MarketNeed(models.Model):
+    """Demande publiée par un visiteur/acheteur."""
+
+    TYPE_CHOICES = [
+        ('Grossiste', 'Grossiste'),
+        ('Restaurant', 'Restaurant'),
+        ('Transformateur', 'Transformateur'),
+        ('Distributeur', 'Distributeur'),
+    ]
+    QUALITY_CHOICES = MarketOffer.QUALITY_CHOICES
+
+    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='market_needs')
+    buyer_name = models.CharField(max_length=160)
+    buyer_phone = models.CharField(max_length=30)
+    crop = models.CharField(max_length=120)
+    region = models.CharField(max_length=120)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    quality = models.CharField(max_length=30, choices=QUALITY_CHOICES)
+    target_price = models.DecimalField(max_digits=10, decimal_places=2)
+    delivery_date = models.DateField()
+    buyer_type = models.CharField(max_length=30, choices=TYPE_CHOICES, default='Grossiste')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class MarketNegotiation(models.Model):
+    """Prise de contact entre une offre et une demande compatibles."""
+
+    STATUS_CHOICES = [
+        ('opened', 'Ouverte'),
+        ('accepted', 'Acceptée'),
+        ('rejected', 'Refusée'),
+        ('closed', 'Clôturée'),
+    ]
+
+    offer = models.ForeignKey(MarketOffer, on_delete=models.CASCADE, related_name='negotiations')
+    need = models.ForeignKey(MarketNeed, on_delete=models.CASCADE, related_name='negotiations')
+    initiated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='initiated_market_negotiations')
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='opened')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['offer', 'need'], name='unique_market_negotiation_pair'),
+        ]

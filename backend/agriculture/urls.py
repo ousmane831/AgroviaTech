@@ -10,6 +10,10 @@ from .views import (
     RecolteListCreateView,
     resolve_alerte,
     statistiques,
+    MarketOfferListCreateView,
+    MarketNeedListCreateView,
+    MarketNegotiationListCreateView,
+    market_matches,
 )
 
 urlpatterns = [
@@ -23,4 +27,8 @@ urlpatterns = [
     path('predictions/', PredictionListView.as_view(), name='predictions-list'),
     path('predictions/<int:pk>/', PredictionDetailView.as_view(), name='predictions-detail'),
     path('statistiques/', statistiques, name='agriculture-statistiques'),
+    path('market/offers/', MarketOfferListCreateView.as_view(), name='market-offers'),
+    path('market/needs/', MarketNeedListCreateView.as_view(), name='market-needs'),
+    path('market/matches/', market_matches, name='market-matches'),
+    path('market/negotiations/', MarketNegotiationListCreateView.as_view(), name='market-negotiations'),
 ]

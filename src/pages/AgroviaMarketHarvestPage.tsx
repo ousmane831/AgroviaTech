@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getHarvestOffers, saveHarvestOffers, type HarvestOffer, type MarketQuality } from '@/data/agroviamarket';
-import { ArrowRight, CheckCircle2, Leaf, MapPin, Package, Sparkles, TrendingUp } from 'lucide-react';
+import { createMarketOffer } from '@/lib/marketApi';
+import { ArrowRight, CheckCircle2, Leaf, MapPin, Package, TrendingUp } from 'lucide-react';
 
 const suggestedPrice = [
   { label: 'Arachides', value: '570 FCFA/kg' },
@@ -23,34 +23,41 @@ const defaultForm = {
   localisation: 'Dakar',
   date: '2026-09-10',
   prix: '570',
+  telephone: '',
 };
 
 export default function AgroviaMarketHarvestPage() {
   const navigate = useNavigate();
   const { user } = useAuthComplete();
   const [form, setForm] = useState(defaultForm);
+  const [error, setError] = useState('');
 
   const handleChange = (field: keyof typeof defaultForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    const offers = getHarvestOffers();
-    const farmerName = `${user?.prenom || ''} ${user?.nom || ''}`.trim() || user?.email || 'Agriculteur';
-    const nextOffer: HarvestOffer = {
-      id: `offer-${Date.now()}`,
-      farmerName,
-      region: form.localisation,
-      crop: form.culture,
-      quantity: Number(form.quantite) || 0,
-      quality: form.qualite as MarketQuality,
-      availableDate: form.date,
-      priceIndicative: Number(form.prix) || 0,
-      status: 'active',
-    };
+  const handleSubmit = async () => {
+    const phone = (form.telephone || user?.telephone || '').trim();
+    if (!phone) {
+      setError('Ajoutez un numéro WhatsApp pour recevoir les contacts des acheteurs.');
+      return;
+    }
 
-    saveHarvestOffers([nextOffer, ...offers]);
-    navigate('/visitor/market/matches');
+    setError('');
+    try {
+      await createMarketOffer({
+        crop: form.culture,
+        region: form.localisation,
+        quantity: Number(form.quantite) || 0,
+        quality: form.qualite as 'Standard' | 'Premium' | 'Classe A',
+        available_date: form.date,
+        price_indicative: Number(form.prix) || 0,
+        farmer_phone: phone.replace(/\s/g, ''),
+      });
+      navigate('/visitor/market/matches');
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : 'Impossible de publier la récolte.');
+    }
   };
 
   return (
@@ -105,6 +112,12 @@ export default function AgroviaMarketHarvestPage() {
                 <Label htmlFor="prix">Prix estimé</Label>
                 <Input id="prix" value={form.prix} onChange={(e) => handleChange('prix', e.target.value)} placeholder="Ex : 570 FCFA/kg" className="h-12 rounded-xl border-[#dfe5df] bg-[#f9f9f7]" />
               </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="telephone">Téléphone WhatsApp</Label>
+                <Input id="telephone" type="tel" value={form.telephone || user?.telephone || ''} onChange={(e) => handleChange('telephone', e.target.value)} placeholder="Ex : +221 77 000 00 00" className="h-12 rounded-xl border-[#dfe5df] bg-[#f9f9f7]" required />
+                <p className="text-xs text-[#69756d]">Ce numéro sera visible uniquement pour contacter votre offre.</p>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end">
@@ -113,6 +126,7 @@ export default function AgroviaMarketHarvestPage() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
+            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
           </CardContent>
         </Card>
 

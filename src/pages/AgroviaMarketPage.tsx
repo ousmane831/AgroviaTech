@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { VisitorLayout } from '@/components/layout/VisitorLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useAuthComplete } from '@/hooks/useAuthComplete';
+import { fetchMarketNeeds, fetchMarketOffers } from '@/lib/marketApi';
 import {
   ArrowRight,
   BadgeCheck,
@@ -12,46 +14,6 @@ import {
   ShoppingBag,
   Truck,
 } from 'lucide-react';
-
-const marketStats = [
-  { label: 'Offres actives', value: '248', detail: 'Récoltes disponibles' },
-  { label: 'Prix moyen', value: '540 FCFA/kg', detail: 'Sur les cultures locales' },
-  { label: 'Acheteurs', value: '64', detail: 'Grossistes, restaurants, transformateurs' },
-  { label: 'Taux de match', value: '87%', detail: 'Couverture régionale' },
-];
-
-const offers = [
-  {
-    culture: 'Arachides',
-    region: 'Dakar',
-    quantity: '480 kg',
-    quality: 'Premium',
-    price: '570 FCFA/kg',
-    tag: 'Très demandé'
-  },
-  {
-    culture: 'Tomates',
-    region: 'Thiès',
-    quantity: '620 kg',
-    quality: 'Classe A',
-    price: '610 FCFA/kg',
-    tag: 'Livraison rapide'
-  },
-  {
-    culture: 'Mil',
-    region: 'Saint-Louis',
-    quantity: '390 kg',
-    quality: 'Standard',
-    price: '410 FCFA/kg',
-    tag: 'Prix solide'
-  },
-];
-
-const buyerNeeds = [
-  { name: 'Grossiste Dakar', quantity: '300 kg', product: 'Arachides', quality: 'Premium', zone: 'Dakar' },
-  { name: 'Restaurant local', quantity: '180 kg', product: 'Tomates', quality: 'Classe A', zone: 'Thiès' },
-  { name: 'Transformateur', quantity: '500 kg', product: 'Mil', quality: 'Standard', zone: 'Saint-Louis' },
-];
 
 const steps = [
   { title: '1. Déclarer la récolte', description: 'Culture, quantité, qualité, localisation et date de disponibilité.' },
@@ -64,6 +26,32 @@ export default function AgroviaMarketPage() {
   const navigate = useNavigate();
   const { user } = useAuthComplete();
   const isFarmer = user?.role === 'AGRICULTEUR';
+  const [offers, setOffers] = useState<Awaited<ReturnType<typeof fetchMarketOffers>>>([]);
+  const [buyerNeeds, setBuyerNeeds] = useState<Awaited<ReturnType<typeof fetchMarketNeeds>>>([]);
+
+  useEffect(() => {
+    const loadMarket = async () => {
+      try {
+        const [offerData, needData] = await Promise.all([fetchMarketOffers(), fetchMarketNeeds()]);
+        setOffers(offerData.filter((offer) => offer.status === 'active'));
+        setBuyerNeeds(needData);
+      } catch (error) {
+        console.error('Erreur lors du chargement du marché:', error);
+      }
+    };
+
+    void loadMarket();
+  }, []);
+
+  const averagePrice = offers.length
+    ? Math.round(offers.reduce((total, offer) => total + offer.priceIndicative, 0) / offers.length)
+    : 0;
+  const marketStats = [
+    { label: 'Offres actives', value: String(offers.length), detail: 'Récoltes disponibles' },
+    { label: 'Prix moyen', value: `${averagePrice} FCFA/kg`, detail: 'Sur les offres publiées' },
+    { label: 'Acheteurs', value: String(buyerNeeds.length), detail: 'Demandes enregistrées' },
+    { label: 'Régions couvertes', value: String(new Set(offers.map((offer) => offer.region)).size), detail: 'Selon les offres actives' },
+  ];
 
   return (
     <VisitorLayout
@@ -128,20 +116,20 @@ export default function AgroviaMarketPage() {
 
           <div className="space-y-4">
             {offers.map((offer) => (
-              <div key={offer.culture} className="rounded-xl border border-[#e1e5df] bg-[#f8faf8] p-4">
+              <div key={offer.id} className="rounded-xl border border-[#e1e5df] bg-[#f8faf8] p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#eaf5ec] text-[#1d4d2d]">
                       <PackageCheck className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-[1.1rem] font-semibold text-[#1d2a22]">{offer.culture}</p>
+                      <p className="text-[1.1rem] font-semibold text-[#1d2a22]">{offer.crop}</p>
                       <p className="text-sm text-[#5d665e]">{offer.region}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="rounded-md bg-[#e5f2ff] px-2.5 py-1 text-[0.7rem] font-medium text-[#294d8d]">{offer.tag}</span>
+                    <span className="rounded-md bg-[#e5f2ff] px-2.5 py-1 text-[0.7rem] font-medium text-[#294d8d]">Disponible</span>
                     <span className="rounded-md bg-[#eef7ef] px-2.5 py-1 text-[0.7rem] font-medium text-[#1d4d2d]">{offer.quality}</span>
                   </div>
                 </div>
@@ -149,11 +137,11 @@ export default function AgroviaMarketPage() {
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.08em] text-[#6e7a73]">Quantité</p>
-                    <p className="mt-1 font-medium text-[#1d2a22]">{offer.quantity}</p>
+                    <p className="mt-1 font-medium text-[#1d2a22]">{offer.quantity} kg</p>
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.08em] text-[#6e7a73]">Prix indicatif</p>
-                    <p className="mt-1 font-medium text-[#1d2a22]">{offer.price}</p>
+                    <p className="mt-1 font-medium text-[#1d2a22]">{offer.priceIndicative} FCFA/kg</p>
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.08em] text-[#6e7a73]">Disponibilité</p>
@@ -170,18 +158,18 @@ export default function AgroviaMarketPage() {
           <p className="mt-1 text-sm text-[#69756d]">Des demandes à consulter avant de publier votre offre.</p>
           <div className="mt-5 space-y-4">
             {buyerNeeds.map((need) => (
-              <div key={need.name} className="rounded-xl border border-[#e1e5df] bg-white p-4">
+              <div key={need.id} className="rounded-xl border border-[#e1e5df] bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-[#1d2a22]">{need.name}</p>
-                    <p className="mt-1 text-sm text-[#5d665e]">{need.product}</p>
+                    <p className="font-semibold text-[#1d2a22]">{need.buyerName}</p>
+                    <p className="mt-1 text-sm text-[#5d665e]">{need.crop}</p>
                   </div>
                   <ShoppingBag className="h-5 w-5 text-[#1d4d2d]" />
                 </div>
                 <div className="mt-3 grid gap-2 text-sm text-[#47554d]">
-                  <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#1d4d2d]" /> {need.quantity}</div>
+                  <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#1d4d2d]" /> {need.quantity} kg</div>
                   <div className="flex items-center gap-2"><PackageCheck className="h-4 w-4 text-[#1d4d2d]" /> Qualité {need.quality}</div>
-                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[#1d4d2d]" /> Zone {need.zone}</div>
+                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[#1d4d2d]" /> Zone {need.region}</div>
                 </div>
               </div>
             ))}

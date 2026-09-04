@@ -3,6 +3,7 @@ export type MarketQuality = 'Standard' | 'Premium' | 'Classe A';
 export interface HarvestOffer {
   id: string;
   farmerName: string;
+  farmerPhone?: string;
   region: string;
   crop: string;
   quantity: number;
@@ -15,6 +16,7 @@ export interface HarvestOffer {
 export interface BuyerNeed {
   id: string;
   buyerName: string;
+  buyerPhone?: string;
   region: string;
   crop: string;
   quantity: number;
@@ -29,7 +31,9 @@ export interface MarketMatch {
   offerId: string;
   needId: string;
   buyerName: string;
+  buyerPhone?: string;
   farmerName: string;
+  farmerPhone?: string;
   crop: string;
   region: string;
   quantity: number;
@@ -202,7 +206,9 @@ export function computeMarketMatches(): MarketMatch[] {
             offerId: offer.id,
             needId: need.id,
             buyerName: need.buyerName,
+            buyerPhone: need.buyerPhone,
             farmerName: offer.farmerName,
+            farmerPhone: offer.farmerPhone,
             crop: offer.crop,
             region: offer.region,
             quantity: Math.min(offer.quantity, need.quantity),

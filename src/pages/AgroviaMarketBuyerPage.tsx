@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getBuyerNeeds, saveBuyerNeeds, type BuyerNeed, type MarketQuality } from '@/data/agroviamarket';
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, MapPinned, ShoppingCart, Sparkles } from 'lucide-react';
+import { createMarketNeed } from '@/lib/marketApi';
+import { ArrowRight, BadgeCheck, BriefcaseBusiness, MapPinned, ShoppingCart } from 'lucide-react';
 
 const defaultForm = {
   produit: 'Arachides',
@@ -16,34 +16,42 @@ const defaultForm = {
   zone: 'Dakar',
   budget: '600',
   delai: '2026-09-12',
+  telephone: '',
 };
 
 export default function AgroviaMarketBuyerPage() {
   const navigate = useNavigate();
   const { user } = useAuthComplete();
   const [form, setForm] = useState(defaultForm);
+  const [error, setError] = useState('');
 
   const handleChange = (field: keyof typeof defaultForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    const needs = getBuyerNeeds();
-    const buyerName = `${user?.prenom || ''} ${user?.nom || ''}`.trim() || user?.email || 'Acheteur';
-    const nextNeed: BuyerNeed = {
-      id: `need-${Date.now()}`,
-      buyerName,
-      region: form.zone,
-      crop: form.produit,
-      quantity: Number(form.quantite) || 0,
-      quality: form.qualite as MarketQuality,
-      targetPrice: Number(form.budget) || 0,
-      deliveryDate: form.delai,
-      type: 'Grossiste',
-    };
+  const handleSubmit = async () => {
+    const phone = (form.telephone || user?.telephone || '').trim();
+    if (!phone) {
+      setError('Ajoutez un numéro WhatsApp pour recevoir les contacts des agriculteurs.');
+      return;
+    }
 
-    saveBuyerNeeds([nextNeed, ...needs]);
-    navigate('/visitor/market/matches');
+    setError('');
+    try {
+      await createMarketNeed({
+        crop: form.produit,
+        region: form.zone,
+        quantity: Number(form.quantite) || 0,
+        quality: form.qualite as 'Standard' | 'Premium' | 'Classe A',
+        target_price: Number(form.budget) || 0,
+        delivery_date: form.delai,
+        buyer_type: 'Grossiste',
+        buyer_phone: phone.replace(/\s/g, ''),
+      });
+      navigate('/visitor/market/matches');
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : 'Impossible de publier la demande.');
+    }
   };
 
   return (
@@ -98,6 +106,12 @@ export default function AgroviaMarketBuyerPage() {
                 <Label htmlFor="delai">Délai de livraison</Label>
                 <Input id="delai" type="date" value={form.delai} onChange={(e) => handleChange('delai', e.target.value)} className="h-12 rounded-xl border-[#dfe5df] bg-[#f9f9f7]" />
               </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="telephone">Téléphone WhatsApp</Label>
+                <Input id="telephone" type="tel" value={form.telephone || user?.telephone || ''} onChange={(e) => handleChange('telephone', e.target.value)} placeholder="Ex : +221 77 000 00 00" className="h-12 rounded-xl border-[#dfe5df] bg-[#f9f9f7]" required />
+                <p className="text-xs text-[#69756d]">Ce numéro sera visible uniquement pour recevoir les contacts liés à votre demande.</p>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end">
@@ -106,6 +120,7 @@ export default function AgroviaMarketBuyerPage() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
+            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
           </CardContent>
         </Card>
 
