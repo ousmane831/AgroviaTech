@@ -8,9 +8,9 @@ from django.db.models import Sum
 from django.db import IntegrityError
 from django.db.models import Q
 from django.utils import timezone
-from .models import Parcelle, Recolte, Alerte, Prediction, MarketOffer, MarketNeed, MarketNegotiation
+from .models import Parcelle, Recolte, Alerte, Prediction, PhotoAnalysis, MarketOffer, MarketNeed, MarketNegotiation
 from .serializers import (
-    ParcelleSerializer, RecolteSerializer, AlerteSerializer, PredictionSerializer,
+    ParcelleSerializer, RecolteSerializer, AlerteSerializer, PredictionSerializer, PhotoAnalysisSerializer,
     MarketOfferSerializer, MarketNeedSerializer, MarketNegotiationSerializer,
 )
 
@@ -128,6 +128,29 @@ def statistiques(request):
         'total_recoltes': total_recoltes,
         'alertes_actives': alertes_actives,
     })
+
+class PhotoAnalysisListView(generics.ListCreateAPIView):
+    """Vue pour lister et créer des analyses de photos"""
+    serializer_class = PhotoAnalysisSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['parcelle']
+    ordering_fields = ['created_at', 'confiance']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return PhotoAnalysis.objects.filter(proprietaire=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(proprietaire=self.request.user)
+
+class PhotoAnalysisDetailView(generics.RetrieveAPIView):
+    """Vue pour les détails d'une analyse de photo"""
+    serializer_class = PhotoAnalysisSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return PhotoAnalysis.objects.filter(proprietaire=self.request.user)
 
 
 def _is_role(user, role):

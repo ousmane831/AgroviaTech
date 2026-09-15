@@ -200,3 +200,29 @@ class MarketNegotiation(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['offer', 'need'], name='unique_market_negotiation_pair'),
         ]
+
+
+class PhotoAnalysis(models.Model):
+    """Modèle pour l'analyse de photos de cultures par IA"""
+    
+    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE, related_name='photo_analyses', null=True, blank=True)
+    proprietaire = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='photo_analyses')
+    photo = models.ImageField(upload_to='photo_analyses/')
+    
+    # Résultats de l'analyse
+    etat_apparent = models.TextField()
+    anomalies = models.JSONField(default=list)
+    maturite = models.CharField(max_length=100)
+    qualite = models.CharField(max_length=100)
+    prescription = models.TextField()
+    confiance = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Analyse photo"
+        verbose_name_plural = "Analyses photos"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Analyse {self.proprietaire.username} - {self.created_at.strftime('%d/%m/%Y')}"

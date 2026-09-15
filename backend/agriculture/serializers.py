@@ -4,6 +4,7 @@ from .models import (
     Recolte,
     Alerte,
     Prediction,
+    PhotoAnalysis,
     MarketOffer,
     MarketNeed,
     MarketNegotiation,
@@ -44,6 +45,17 @@ class PredictionSerializer(serializers.ModelSerializer):
         model = Prediction
         fields = ['id', 'parcelle', 'parcelle_nom', 'rendement_prevu', 'pertes_estimees', 'confiance', 'recommandations', 'date_creation']
         read_only_fields = ['id', 'date_creation']
+
+class PhotoAnalysisSerializer(serializers.ModelSerializer):
+    """Serializer pour l'analyse de photos"""
+    proprietaire_username = serializers.CharField(source='proprietaire.username', read_only=True)
+    parcelle_nom = serializers.CharField(source='parcelle.nom', read_only=True, allow_null=True)
+    photo_url = serializers.ImageField(source='photo', read_only=True)
+    
+    class Meta:
+        model = PhotoAnalysis
+        fields = ['id', 'parcelle', 'parcelle_nom', 'proprietaire', 'proprietaire_username', 'photo', 'photo_url', 'etat_apparent', 'anomalies', 'maturite', 'qualite', 'prescription', 'confiance', 'created_at']
+        read_only_fields = ['id', 'created_at', 'proprietaire', 'etat_apparent', 'anomalies', 'maturite', 'qualite', 'prescription', 'confiance']
 
 
 class MarketOfferSerializer(serializers.ModelSerializer):

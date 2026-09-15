@@ -1,4 +1,4 @@
-import { Bell, User, LogOut, Settings, LayoutDashboard, LogIn } from 'lucide-react';
+import { Bell, User, LogOut, Settings, LayoutDashboard, LogIn, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { alertes } from '@/data/mockData';
@@ -48,23 +48,35 @@ export function Header({ title, subtitle }: HeaderProps) {
 
       <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:gap-3">
         {user && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="relative h-10 w-10 rounded-full border border-[#dfe5df] bg-white text-[#1e2d25] shadow-sm transition-colors hover:bg-[#eef7f0] hover:text-[#1d4d2d] sm:h-11 sm:w-11"
-            onClick={() => navigate('/agriculteur/alerts')}
-            title="Voir les alertes"
-          >
-            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-            {alertesActives > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[9px] animate-pulse sm:h-5 sm:w-5"
-              >
-                {alertesActives}
-              </Badge>
-            )}
-          </Button>
+          <>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative h-10 w-10 rounded-full border border-[#dfe5df] bg-white text-[#1e2d25] shadow-sm transition-colors hover:bg-[#eef7f0] hover:text-[#1d4d2d] sm:h-11 sm:w-11"
+              onClick={() => navigate('/agriculteur/analyse-photo')}
+              title="Analyser une photo"
+            >
+              <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative h-10 w-10 rounded-full border border-[#dfe5df] bg-white text-[#1e2d25] shadow-sm transition-colors hover:bg-[#eef7f0] hover:text-[#1d4d2d] sm:h-11 sm:w-11"
+              onClick={() => navigate('/agriculteur/alerts')}
+              title="Voir les alertes"
+            >
+              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+              {alertesActives > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[9px] animate-pulse sm:h-5 sm:w-5"
+                >
+                  {alertesActives}
+                </Badge>
+              )}
+            </Button>
+          </>
         )}
 
         {user ? (

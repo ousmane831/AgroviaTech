@@ -15,19 +15,17 @@ import {
   Leaf,
   ShoppingBag,
   MessageSquareText,
+  Camera,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Navigation items pour AgroviaTech - Espace agriculteur
+// Navigation items pour AgroviaTech - Espace agriculteur (simplifié)
 const navItems = [
   { path: '/agriculteur/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
   { path: '/agriculteur/parcels', icon: MapPin, label: 'Parcelles' },
   { path: '/agriculteur/harvests', icon: Wheat, label: 'Récoltes' },
-  { path: '/agriculteur/statistics', icon: TrendingUp, label: 'Statistiques' },
   { path: '/agriculteur/alerts', icon: Bell, label: 'Alertes' },
-  { path: '/visitor/market', icon: ShoppingBag, label: 'AgroviaMarket' },
-  { path: '/visitor/market/matches', icon: MessageSquareText, label: 'Correspondances' },
-  { path: '/predictions', icon: Brain, label: 'Prédictions IA' },
+  { path: '/visitor/market', icon: ShoppingBag, label: 'Marché' },
 ];
 
 interface SidebarProps {

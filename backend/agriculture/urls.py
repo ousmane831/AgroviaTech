@@ -14,6 +14,8 @@ from .views import (
     MarketNeedListCreateView,
     MarketNegotiationListCreateView,
     market_matches,
+    PhotoAnalysisListView,
+    PhotoAnalysisDetailView,
 )
 
 urlpatterns = [
@@ -31,4 +33,6 @@ urlpatterns = [
     path('market/needs/', MarketNeedListCreateView.as_view(), name='market-needs'),
     path('market/matches/', market_matches, name='market-matches'),
     path('market/negotiations/', MarketNegotiationListCreateView.as_view(), name='market-negotiations'),
+    path('analyse-photo/', PhotoAnalysisListView.as_view(), name='photo-analysis-list'),
+    path('analyse-photo/<int:pk>/', PhotoAnalysisDetailView.as_view(), name='photo-analysis-detail'),
 ]

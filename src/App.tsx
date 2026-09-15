@@ -12,6 +12,7 @@ import Statistiques from "./pages/Statistiques";
 import Alertes from "./pages/Alertes";
 import Predictions from "./pages/Predictions";
 import Parametres from "./pages/Parametres";
+import AnalysePhoto from "./pages/AnalysePhoto";
 import NotFound from "./pages/NotFound";
 
 // Authentification
@@ -118,6 +119,10 @@ const App = () => (
             path="/agriculteur/settings"
             element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><Parametres /></ProtectedRoute>}
           />
+          <Route
+            path="/agriculteur/analyse-photo"
+            element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><AnalysePhoto /></ProtectedRoute>}
+          />
           
           {/* Routes principales (legacy) */}
           <Route path="/parcelles" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><Parcelles /></ProtectedRoute>} />
@@ -125,6 +130,7 @@ const App = () => (
           <Route path="/statistiques" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><Statistiques /></ProtectedRoute>} />
           <Route path="/alertes" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><Alertes /></ProtectedRoute>} />
           <Route path="/predictions" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><Predictions /></ProtectedRoute>} />
+          <Route path="/analyse-photo" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><AnalysePhoto /></ProtectedRoute>} />
           <Route path="/parametres" element={<ProtectedRoute allowedRoles={['AGRICULTEUR']}><Parametres /></ProtectedRoute>} />
           
           {/* Route 404 */}
