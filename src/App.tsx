@@ -29,6 +29,9 @@ import AgroviaMarketHarvestPage from "./pages/AgroviaMarketHarvestPage";
 import AgroviaMarketBuyerPage from "./pages/AgroviaMarketBuyerPage";
 import AgroviaMarketMatchesPage from "./pages/AgroviaMarketMatchesPage";
 
+// Chatbot
+import { ChatbotWidget } from "@/components/chatbot/ChatbotWidget";
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({
@@ -136,6 +139,7 @@ const App = () => (
           {/* Route 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ChatbotWidget />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

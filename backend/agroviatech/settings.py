@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'agriculture',
     'users',
+    'ai_assistant',
 ]
 
 MIDDLEWARE = [
