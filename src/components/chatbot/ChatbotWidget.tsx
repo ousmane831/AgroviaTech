@@ -4,7 +4,7 @@ import { X, Mic, Volume2, Send, Square } from 'lucide-react';
 import { chatbotApi } from '@/lib/chatbotApi';
 import { useAuthComplete } from '@/hooks/useAuthComplete';
 
-type Language = 'fr' | 'wo' | 'ff' | 'sr';
+type Language = 'wo' | 'ff' | 'sr';
 
 interface Message {
   id: string;
@@ -16,7 +16,6 @@ interface Message {
 }
 
 const languageNames: Record<Language, string> = {
-  fr: 'Français',
   wo: 'Wolof',
   ff: 'Poular',
   sr: 'Sérère',
@@ -153,7 +152,7 @@ export function ChatbotWidget() {
   const { user } = useAuthComplete();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState<Language>('fr');
+  const [language, setLanguage] = useState<Language>('wo');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
