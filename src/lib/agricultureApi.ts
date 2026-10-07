@@ -1,6 +1,6 @@
 import { Parcelle, Recolte, CultureType } from '@/data/mockData';
 
-const API_BASE_URL = 'http://localhost:8000/api/agriculture';
+const API_BASE_URL = import.meta.env.VITE_API_URL + '/agriculture';
 
 const getToken = () => localStorage.getItem('auth_token');
 
@@ -186,3 +186,4 @@ export const updateRecolte = async (id: string, payload: Partial<Recolte>) => {
 export const deleteRecolte = async (id: string) => {
   return request(`/recoltes/${id}/`, { method: 'DELETE' });
 };
+

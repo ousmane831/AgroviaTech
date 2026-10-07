@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, UserRole, AuthState, LoginCredentials, RegisterData, AuthResponse } from '@/types/auth';
 import { canAccessRoute, ROLE_REDIRECTS } from '@/types/auth';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const normalizeRole = (role?: string): UserRole => {
   switch ((role || '').toLowerCase()) {
@@ -82,7 +82,7 @@ export const useAuthComplete = () => {
 
   const hydrateUserFromToken = useCallback(async (token: string) => {
     try {
-      const response = await fetchJson(`${API_BASE_URL}/api/auth/profile/`, {
+      const response = await fetchJson(`${API_BASE_URL}/auth/profile/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -142,7 +142,7 @@ export const useAuthComplete = () => {
     setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const payload = await fetchJson(`${API_BASE_URL}/api/auth/login/`, {
+      const payload = await fetchJson(`${API_BASE_URL}/auth/login/`, {
         method: 'POST',
         body: JSON.stringify({
           username: credentials.email,
@@ -181,7 +181,7 @@ export const useAuthComplete = () => {
     setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const payload = await fetchJson(`${API_BASE_URL}/api/auth/register/`, {
+      const payload = await fetchJson(`${API_BASE_URL}/auth/register/`, {
         method: 'POST',
         body: JSON.stringify({
           username: data.email,
@@ -252,7 +252,7 @@ export const useAuthComplete = () => {
     setAuthState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const response = await fetchJson(`${API_BASE_URL}/api/auth/profile/`, {
+      const response = await fetchJson(`${API_BASE_URL}/auth/profile/`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${authState.token}`,
@@ -285,7 +285,7 @@ export const useAuthComplete = () => {
       throw new Error('Accès non autorisé');
     }
 
-    const response = await fetchJson(`${API_BASE_URL}/api/auth/users/${userId}/role/`, {
+    const response = await fetchJson(`${API_BASE_URL}/auth/users/${userId}/role/`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${authState.token}`,
@@ -306,3 +306,6 @@ export const useAuthComplete = () => {
     canAccessRoute: (route: string) => (authState.user ? canAccessRoute(authState.user.role, route) : false),
   };
 };
+
+
+

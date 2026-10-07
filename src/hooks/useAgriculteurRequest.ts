@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { CreateAgriculteurRequestData, AgriculteurRequest, AgriculteurRequestStatus } from '@/types/auth';
 import { useAuthComplete } from './useAuthComplete';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const normalizeFarmerRequest = (user: any): AgriculteurRequest => ({
   id: String(user.id),
@@ -33,7 +33,7 @@ export const useAgriculteurRequest = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/users/`, {
+      const response = await fetch(`${API_BASE_URL}/auth/users/`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ export const useAgriculteurRequest = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/users/`, {
+      const response = await fetch(`${API_BASE_URL}/auth/users/`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -133,7 +133,7 @@ export const useAgriculteurRequest = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/users/${requestId}/approve-farmer/`, {
+      const response = await fetch(`${API_BASE_URL}/auth/users/${requestId}/approve-farmer/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ export const useAgriculteurRequest = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/users/${requestId}/reject-farmer/`, {
+      const response = await fetch(`${API_BASE_URL}/auth/users/${requestId}/reject-farmer/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,3 +206,6 @@ export const useAgriculteurRequest = () => {
     canCreateNewRequest: !currentRequest || currentRequest.status === 'rejected',
   };
 };
+
+
+

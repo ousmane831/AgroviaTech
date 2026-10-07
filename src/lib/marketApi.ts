@@ -1,6 +1,6 @@
 import type { BuyerNeed, HarvestOffer, MarketMatch, MarketQuality } from '@/data/agroviamarket';
 
-const API_BASE_URL = 'http://localhost:8000/api/agriculture';
+const API_BASE_URL = import.meta.env.VITE_API_URL + '/agriculture';
 
 const headers = () => {
   const token = localStorage.getItem('auth_token');
@@ -105,3 +105,4 @@ export const createMarketNegotiation = async (offerId: string, needId: string, m
   method: 'POST',
   body: JSON.stringify({ offer_id: offerId, need_id: needId, message }),
 });
+
