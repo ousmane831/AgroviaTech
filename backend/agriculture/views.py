@@ -13,6 +13,7 @@ from .serializers import (
     ParcelleSerializer, RecolteSerializer, AlerteSerializer, PredictionSerializer, PhotoAnalysisSerializer,
     MarketOfferSerializer, MarketNeedSerializer, MarketNegotiationSerializer,
 )
+from .services import get_parcelle_context
 
 class ParcelleListCreateView(generics.ListCreateAPIView):
     """Vue pour lister et créer des parcelles"""
@@ -37,6 +38,39 @@ class ParcelleDetailView(generics.RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         return Parcelle.objects.filter(proprietaire=self.request.user)
+class ParcelleContextView(generics.GenericAPIView):
+    """
+    Retourne un contexte agricole compact pour Sama Agri Voice.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_externe):
+        try:
+            parcelle = Parcelle.objects.get(id_externe=id_externe)
+        except Parcelle.DoesNotExist:
+            return Response(
+                {"detail": "Parcelle non trouvée."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Parcelle normale : uniquement son propriétaire.
+        if not parcelle.est_demo and parcelle.proprietaire != request.user:
+            return Response(
+                {"detail": "Parcelle non trouvée."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Parcelle démo : uniquement les administrateurs.
+        if parcelle.est_demo and request.user.role != "admin":
+            return Response(
+                {"detail": "Accès démo non autorisé."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        context = get_parcelle_context(parcelle)
+
+        return Response(context, status=status.HTTP_200_OK)
 
 class RecolteListCreateView(generics.ListCreateAPIView):
     """Vue pour lister et créer des récoltes"""

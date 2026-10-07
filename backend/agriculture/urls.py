@@ -18,8 +18,34 @@ from .views import (
     PhotoAnalysisDetailView,
 )
 
+from .views import (
+    AlerteDetailView,
+    AlerteListCreateView,
+    ParcelleDetailView,
+    ParcelleListCreateView,
+    ParcelleContextView,
+    PredictionDetailView,
+    PredictionListView,
+    RecolteDetailView,
+    RecolteListCreateView,
+    resolve_alerte,
+    statistiques,
+    MarketOfferListCreateView,
+    MarketNeedListCreateView,
+    MarketNegotiationListCreateView,
+    market_matches,
+    PhotoAnalysisListView,
+    PhotoAnalysisDetailView,
+)
+
+
 urlpatterns = [
     path('parcelles/', ParcelleListCreateView.as_view(), name='parcelles-list-create'),
+    path(
+    'parcelles/<str:id_externe>/context/',
+    ParcelleContextView.as_view(),
+    name='parcelle-context'
+),
     path('parcelles/<int:pk>/', ParcelleDetailView.as_view(), name='parcelles-detail'),
     path('recoltes/', RecolteListCreateView.as_view(), name='recoltes-list-create'),
     path('recoltes/<int:pk>/', RecolteDetailView.as_view(), name='recoltes-detail'),

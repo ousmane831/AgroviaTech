@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { X, Mic, Volume2, Send, Square } from 'lucide-react';
 import { chatbotApi } from '@/lib/chatbotApi';
 import { useAuthComplete } from '@/hooks/useAuthComplete';
-
+import { fetchParcelles } from '@/lib/agricultureApi';
 type Language = 'wo' | 'ff' | 'sr';
 
 interface Message {
@@ -159,11 +159,28 @@ export function ChatbotWidget() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<number | null>(null);
-
+  const [parcelleId, setParcelleId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const loadParcelle = async () => {
+      try {
+        const parcelles = await fetchParcelles();
+  
+        if (parcelles.length > 0) {
+          setParcelleId(parcelles[0].id);
+          console.log('🌱 Parcelle utilisée par le chatbot :', parcelles[0]);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de la parcelle :', error);
+      }
+    };
+  
+    void loadParcelle();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -390,12 +407,13 @@ export function ChatbotWidget() {
     setIsLoading(true);
 
     try {
+      console.log("🌱 parcelleId envoyé au chatbot :", parcelleId);
       const response = await chatbotApi.voiceChat({
         audio: audioFile,
         language,
         conversation_id: conversationId || undefined,
+        parcelle_id: parcelleId || undefined,
       });
-
       setConversationId(response.conversation_id);
 
       /*

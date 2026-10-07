@@ -90,7 +90,13 @@ class GalsenAIModel:
 
 
     
-    def agriculture_voice(self, audio_file, language):
+    def agriculture_voice(
+    self,
+    audio_file,
+    language,
+    parcelle_id=None,
+    context=None
+):
         """
         Envoie un fichier audio à Sama Agri Voice
         et récupère la transcription, la réponse agricole
@@ -142,6 +148,15 @@ class GalsenAIModel:
         data = {
             "language": agrivoice_language,
         }
+
+        if parcelle_id:
+            data["parcelle_id"] = parcelle_id
+
+        if context:
+            data["agricultural_context"] = json.dumps(
+                context,
+                ensure_ascii=False
+            )
 
         try:
             response = requests.post(

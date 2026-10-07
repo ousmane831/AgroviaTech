@@ -10,7 +10,10 @@ import re
 import io
 import base64
 import os
+import json
 
+from agriculture.models import Parcelle
+from agriculture.services import get_parcelle_context
 
 class ChatbotViewSet(viewsets.ViewSet):
     """ViewSet pour les opérations du chatbot"""
@@ -116,13 +119,50 @@ class ChatbotViewSet(viewsets.ViewSet):
                     user=request.user,
                     language=language
                 )
+            # Détecter une parcelle mentionnée dans la question transcrite.
+            parcelle_id = None
+            parcelle_context = None
+
+            parcelle_id = request.data.get("parcelle_id")
+            parcelle_context = None
+
+            if parcelle_id:
+                try:
+                    parcelle = Parcelle.objects.get(
+                        id_externe=parcelle_id
+                    )
+
+                    # Même règle de sécurité que l'endpoint contexte.
+                    if not parcelle.est_demo and parcelle.proprietaire != request.user:
+                        return Response(
+                            {"error": "Accès à cette parcelle non autorisé."},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+
+                    if parcelle.est_demo and request.user.role != "admin":
+                        return Response(
+                            {"error": "Accès à la parcelle démo non autorisé."},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+
+                    parcelle_context = get_parcelle_context(parcelle)
+
+                except Parcelle.DoesNotExist:
+                    return Response(
+                        {"error": "Parcelle non trouvée."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+
+                        # La transcription est obtenue par Sama Agri Voice.
+                        # On regarde d'abord le résultat retourné.
 
             # Envoyer l'audio à Sama Agri Voice
             result = galsen_ai.agriculture_voice(
                 audio_file,
-                language
+                language,
+                parcelle_id=parcelle_id,
+                context=parcelle_context
             )
-
             question = result.get('question', '')
             answer = result.get('answer', '')
             audio_url = result.get('audio_url')

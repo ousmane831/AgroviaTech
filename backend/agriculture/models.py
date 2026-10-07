@@ -2,14 +2,15 @@ from django.db import models
 from django.conf import settings
 
 class Parcelle(models.Model):
+
     """Modèle pour les parcelles agricoles"""
-    
+
     STATUT_CHOICES = [
         ('active', 'Active'),
         ('en attente', 'En attente'),
         ('inactive', 'Inactive'),
     ]
-    
+
     TYPE_CULTURE_CHOICES = [
         ('maïs', 'Maïs'),
         ('riz', 'Riz'),
@@ -19,21 +20,72 @@ class Parcelle(models.Model):
         ('oignon', 'Oignon'),
         ('autre', 'Autre'),
     ]
-    
+
     nom = models.CharField(max_length=200)
-    type_culture = models.CharField(max_length=50, choices=TYPE_CULTURE_CHOICES)
-    surface = models.DecimalField(max_digits=10, decimal_places=2)  # en hectares
-    localisation = models.CharField(max_length=200)
-    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='active')
-    proprietaire = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='parcelles')
+
+    # Identifiant provenant du dataset externe : P001, P002, etc.
+    id_externe = models.CharField(
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True
+    )
+
+    type_culture = models.CharField(
+        max_length=50,
+        choices=TYPE_CULTURE_CHOICES
+    )
+
+    # Surface stockée en hectares
+    surface = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    localisation = models.CharField(
+        max_length=200
+    )
+
+    # Informations provenant du dataset
+    type_sol = models.CharField(
+        max_length=50,
+        blank=True,
+        default=''
+    )
+
+    date_plantation = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    # Culture exacte telle qu'elle existe dans le dataset
+    # Exemples : Laitue, Courgette, Radis, Poivron, Carotte
+    culture_dataset = models.CharField(
+        max_length=100,
+        blank=True,
+        default=''
+    )
+
+    statut = models.CharField(
+        max_length=20,
+        choices=STATUT_CHOICES,
+        default='active'
+    )
+
+    proprietaire = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='parcelles'
+    )
+    est_demo = models.BooleanField(default=False)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name = "Parcelle"
         verbose_name_plural = "Parcelles"
         ordering = ['-date_creation']
-    
+
     def __str__(self):
         return f"{self.nom} ({self.type_culture})"
 
@@ -226,3 +278,164 @@ class PhotoAnalysis(models.Model):
     
     def __str__(self):
         return f"Analyse {self.proprietaire.username} - {self.created_at.strftime('%d/%m/%Y')}"
+
+
+class MesureSol(models.Model):
+    """Mesure provenant des capteurs d'irrigation."""
+
+    parcelle = models.ForeignKey(
+        Parcelle,
+        on_delete=models.CASCADE,
+        related_name='mesures_sol'
+    )
+    timestamp = models.DateTimeField()
+    volume_eau_m3 = models.DecimalField(
+        max_digits=10,
+        decimal_places=3
+    )
+    humidite_sol_pct = models.DecimalField(
+        max_digits=5,
+        decimal_places=2
+    )
+    capteur_id = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Mesure du sol"
+        verbose_name_plural = "Mesures du sol"
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(
+                fields=['parcelle', '-timestamp'],
+                name='mesure_parcelle_time_idx'
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.parcelle.nom} - {self.timestamp}"
+
+
+class DonneeProduction(models.Model):
+    """Historique de production provenant du dataset."""
+
+    parcelle = models.ForeignKey(
+        Parcelle,
+        on_delete=models.CASCADE,
+        related_name='productions_dataset'
+    )
+    id_production = models.CharField(
+        max_length=50,
+        unique=True
+    )
+    date_production = models.DateField()
+    rendement_estime = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    volume_recolte = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    couts_production = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    class Meta:
+        verbose_name = "Donnée de production"
+        verbose_name_plural = "Données de production"
+        ordering = ['-date_production']
+
+    def __str__(self):
+        return f"{self.parcelle.nom} - {self.date_production}"
+
+
+class VenteHistorique(models.Model):
+    """Historique des ventes provenant du dataset."""
+
+    parcelle = models.ForeignKey(
+        Parcelle,
+        on_delete=models.CASCADE,
+        related_name='ventes_historiques'
+    )
+    id_vente = models.CharField(
+        max_length=50,
+        unique=True
+    )
+    date_vente = models.DateField()
+    recolte_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    vendu_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    invendu_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    prix_unitaire_eur = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    class Meta:
+        verbose_name = "Vente historique"
+        verbose_name_plural = "Ventes historiques"
+        ordering = ['-date_vente']
+
+    def __str__(self):
+        return f"{self.parcelle.nom} - {self.date_vente}"
+
+
+class CultureDataset(models.Model):
+    """Données de référence issues du dataset culture.csv."""
+
+    id_culture = models.CharField(max_length=50, unique=True)
+    nom_culture = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+    saison = models.CharField(max_length=100)
+
+    duree_cycle_jours = models.PositiveIntegerField()
+
+    rendement_moyen_t_ha = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    besoin_eau_mm_cycle = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    # Identifiants conservés tels quels dans le dataset.
+    # Pas de ForeignKey car PARCxxx n'est pas forcément Pxxx.
+    id_parcelle_dataset = models.CharField(
+        max_length=50,
+        blank=True,
+        default=''
+    )
+
+    id_producteur_dataset = models.CharField(
+        max_length=50,
+        blank=True,
+        default=''
+    )
+
+    class Meta:
+        verbose_name = "Culture du dataset"
+        verbose_name_plural = "Cultures du dataset"
+        ordering = ['id_culture']
+        indexes = [
+            models.Index(
+                fields=['id_parcelle_dataset'],
+                name='culture_parcelle_idx'
+            ),
+            models.Index(
+                fields=['id_producteur_dataset'],
+                name='culture_producteur_idx'
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.id_culture} - {self.nom_culture}"

@@ -55,6 +55,7 @@ export interface VoiceChatRequest {
   audio: File;
   language: string;
   conversation_id?: number;
+  parcelle_id?: string;
 }
 
 export interface VoiceChatResponse {
@@ -135,6 +136,10 @@ export const chatbotApi = {
       'conversation_id',
       request.conversation_id.toString()
     );
+  }
+  
+  if (request.parcelle_id) {
+    formData.append('parcelle_id', request.parcelle_id);
   }
 
   const response = await fetch(
