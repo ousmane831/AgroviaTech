@@ -1,20 +1,17 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.contrib.auth.models import User
 from .models import Conversation, Message, FAQ
 from .serializers import MessageSerializer, ConversationSerializer, FAQSerializer, ChatRequestSerializer
-from django.utils import timezone
 from .services import galsen_ai
-import re
-import io
-import base64
 import os
 import json
-
+from django.db.models import Q
 from agriculture.models import Parcelle
-from agriculture.services import get_parcelle_context
-
+from agriculture.services import (
+    get_parcelle_context,
+    resolve_parcelle_from_question,
+)
 class ChatbotViewSet(viewsets.ViewSet):
     """ViewSet pour les opérations du chatbot"""
     
@@ -120,51 +117,82 @@ class ChatbotViewSet(viewsets.ViewSet):
                     language=language
                 )
             # Détecter une parcelle mentionnée dans la question transcrite.
-            parcelle_id = None
-            parcelle_context = None
-
-            parcelle_id = request.data.get("parcelle_id")
-            parcelle_context = None
-
-            if parcelle_id:
-                try:
-                    parcelle = Parcelle.objects.get(
-                        id_externe=parcelle_id
-                    )
-
-                    # Même règle de sécurité que l'endpoint contexte.
-                    if not parcelle.est_demo and parcelle.proprietaire != request.user:
-                        return Response(
-                            {"error": "Accès à cette parcelle non autorisé."},
-                            status=status.HTTP_403_FORBIDDEN
-                        )
-
-                    # Les parcelles du dataset sont des parcelles de démonstration
-                    # accessibles au chatbot pour les utilisateurs authentifiés.
-                    if parcelle.est_demo:
-                        pass
-
-                    parcelle_context = get_parcelle_context(parcelle)
-
-                except Parcelle.DoesNotExist:
-                    return Response(
-                        {"error": "Parcelle non trouvée."},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-
-                        # La transcription est obtenue par Sama Agri Voice.
-                        # On regarde d'abord le résultat retourné.
-
-            # Envoyer l'audio à Sama Agri Voice
-            result = galsen_ai.agriculture_voice(
+                        # Étape 1 : transcrire l'audio pour connaître la question.
+            question = galsen_ai.transcribe_audio(
                 audio_file,
-                language,
-                parcelle_id=parcelle_id,
+                language
+            )
+
+            print("\n=== TRANSCRIPTION ===")
+            print("Question :", question)
+            print("====================\n")
+
+            # Étape 2 : identifier automatiquement la parcelle.
+            # Étape 2 : identifier automatiquement la parcelle.
+            parcelle = resolve_parcelle_from_question(
+                question,
+                request.user
+            )
+
+            # Si la question ne contient pas d'identifiant,
+            # utiliser la parcelle envoyée par le frontend.
+            if not parcelle:
+                parcelle_id = request.data.get("parcelle_id")
+
+                if parcelle_id:
+                    parcelle = Parcelle.objects.filter(
+                        id_externe__iexact=parcelle_id
+                    ).filter(
+                        Q(proprietaire=request.user) | Q(est_demo=True)
+                    ).first()
+
+            if not parcelle:
+                return Response(
+                    {
+                        "error": "Impossible d'identifier la parcelle.",
+                        "question": question,
+                        "detail": (
+                            "Précisez l'identifiant de la parcelle, "
+                            "par exemple P020 ou parcelle 20."
+                        ),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            parcelle_id = parcelle.id_externe
+
+            print("\n=== PARCELLE IDENTIFIÉE ===")
+            print("Question :", question)
+            print("Parcelle :", parcelle_id)
+            print("Nom :", parcelle.nom)
+            print("===========================\n")
+
+            # Étape 3 : vérifier l'accès à la parcelle.
+            if (
+                not parcelle.est_demo
+                and parcelle.proprietaire != request.user
+            ):
+                return Response(
+                    {
+                        "error": "Accès à cette parcelle non autorisé."
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Étape 4 : récupérer les données agricoles.
+            parcelle_context = get_parcelle_context(parcelle)
+
+            # Étape 5 : envoyer la question + contexte à Sama Agri Voice.
+            result = galsen_ai.respond_text(
+                question=question,
+                language=language,
                 context=parcelle_context
             )
-            question = result.get('question', '')
-            answer = result.get('answer', '')
-            audio_url = result.get('audio_url')
+            
+                     # Envoyer l'audio à Sama Agri Voice
+                        # Récupérer la réponse produite par Sama Agri Voice.
+            answer = result.get("answer", "")
+            audio_url = result.get("audio_url")
 
             # Sauvegarder la question de l'utilisateur
             user_message = Message.objects.create(
@@ -185,12 +213,12 @@ class ChatbotViewSet(viewsets.ViewSet):
             # Sama Agri Voice retourne actuellement
             # un chemin relatif : /audio/reponse_xxx.wav
             if audio_url and audio_url.startswith('/'):
-                agrivoice_url = os.getenv(
-                    'AGRIVOICE_PUBLIC_URL',
-                    'https://voice.agroviatechh.com'
-                ).rstrip('/')
-                audio_url = f"{agrivoice_url}{audio_url}"
+                if request.get_host().startswith(('localhost', '127.0.0.1')):
+                    agrivoice_url = 'http://127.0.0.1:8002'
+                else:
+                    agrivoice_url = 'https://voice.agroviatechh.com'
 
+                audio_url = f"{agrivoice_url}{audio_url}"
             return Response({
                 'question': question,
                 'message': answer,
@@ -358,58 +386,3 @@ class FAQViewSet(viewsets.ModelViewSet):
     """ViewSet pour gérer les FAQ"""
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
-
-class TTSViewSet(viewsets.ViewSet):
-    """ViewSet pour la synthèse vocale (Text-to-Speech)"""
-    
-    @action(detail=False, methods=['post'])
-    def synthesize(self, request):
-        """Synthétiser du texte en audio"""
-        text = request.data.get('text')
-        language = request.data.get('language', 'wo')
-        
-        if not text:
-            return Response({'error': 'Texte requis'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            # Générer l'audio
-            audio_array = galsen_ai.text_to_speech(text, language)
-            
-            if audio_array is None:
-                return Response({'error': 'Erreur lors de la génération audio'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            # Convertir en base64 pour le frontend
-            # Note: En production, on retournerait un fichier audio directement
-            return Response({
-                'success': True,
-                'message': 'Audio généré avec succès',
-                'language': language
-            })
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class STTViewSet(viewsets.ViewSet):
-    """ViewSet pour la reconnaissance vocale (Speech-to-Text)"""
-    
-    @action(detail=False, methods=['post'])
-    def transcribe(self, request):
-        """Transcrire de l'audio en texte"""
-        audio_file = request.FILES.get('audio')
-        language = request.data.get('language', 'wo')
-        
-        if not audio_file:
-            return Response({'error': 'Fichier audio requis'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            # Transcrire l'audio
-            text = galsen_ai.speech_to_text(audio_file, language)
-            
-            if text is None:
-                return Response({'error': 'Erreur lors de la transcription'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            return Response({
-                'text': text,
-                'language': language
-            })
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

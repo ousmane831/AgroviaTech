@@ -1,6 +1,69 @@
-from django.db.models import Avg, Sum
+import re
+
+from django.db.models import Avg, Q, Sum
 
 from .models import Parcelle
+
+def resolve_parcelle_from_question(question, user):
+    """
+    Identifie une parcelle à partir d'une question transcrite.
+
+    Retourne :
+    - une Parcelle si une correspondance unique et autorisée est trouvée ;
+    - None si aucune correspondance fiable n'est trouvée.
+
+    Ne choisit jamais arbitrairement entre plusieurs parcelles.
+    """
+
+    if not question:
+        return None
+
+    question_normalisee = question.strip().lower()
+
+    parcelles = Parcelle.objects.filter(
+        Q(proprietaire=user) | Q(est_demo=True)
+    )
+
+    # 1. Identifiant externe exact : P020
+    match_id = re.search(
+        r"\bp\s*[-_]?\s*(\d{1,3})\b",
+        question_normalisee
+    )
+
+    if match_id:
+        numero = match_id.group(1).zfill(3)
+        parcelles_id = parcelles.filter(
+            id_externe__iexact=f"P{numero}"
+        )
+
+        if parcelles_id.count() == 1:
+            return parcelles_id.first()
+
+    # 2. "parcelle 20", "parcelle numéro 20", etc.
+    match_parcelle = re.search(
+        r"\bparcelle(?:\s+num(?:e|é)ro)?\s*(\d{1,3})\b",
+        question_normalisee
+    )
+
+    if match_parcelle:
+        numero = match_parcelle.group(1).zfill(3)
+
+        parcelles_id = parcelles.filter(
+            id_externe__iexact=f"P{numero}"
+        )
+
+        if parcelles_id.count() == 1:
+            return parcelles_id.first()
+
+    # 3. Recherche par nom exact
+    parcelles_nom = parcelles.filter(
+        nom__iexact=question.strip()
+    )
+
+    if parcelles_nom.count() == 1:
+        return parcelles_nom.first()
+
+    return None
 
 
 def get_parcelle_context(parcelle):

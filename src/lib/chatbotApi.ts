@@ -30,27 +30,6 @@ export interface ChatResponse {
   bot_message_id: number;
 }
 
-export interface TTSRequest {
-  text: string;
-  language: string;
-}
-
-export interface TTSResponse {
-  success: boolean;
-  message: string;
-  language: string;
-}
-
-export interface STTRequest {
-  audio: File;
-  language: string;
-}
-
-export interface STTResponse {
-  text: string;
-  language: string;
-}
-
 export interface VoiceChatRequest {
   audio: File;
   language: string;
@@ -81,45 +60,6 @@ export const chatbotApi = {
     
     if (!response.ok) {
       throw new Error('Erreur lors de la communication avec le chatbot');
-    }
-    
-    return response.json();
-  },
-
-  // Synthèse vocale (Text-to-Speech)
-  async textToSpeech(request: TTSRequest): Promise<TTSResponse> {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/ai-assistant/tts/synthesize/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-      },
-      body: JSON.stringify(request),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erreur lors de la synthèse vocale');
-    }
-    
-    return response.json();
-  },
-
-  // Reconnaissance vocale (Speech-to-Text)
-  async speechToText(request: STTRequest): Promise<STTResponse> {
-    const formData = new FormData();
-    formData.append('audio', request.audio);
-    formData.append('language', request.language);
-    
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/ai-assistant/stt/transcribe/`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-      },
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erreur lors de la reconnaissance vocale');
     }
     
     return response.json();
