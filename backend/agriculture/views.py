@@ -26,8 +26,9 @@ class ParcelleListCreateView(generics.ListCreateAPIView):
     ordering = ['-date_creation']
     
     def get_queryset(self):
-        return Parcelle.objects.filter(proprietaire=self.request.user)
-    
+        return Parcelle.objects.filter(
+            Q(proprietaire=self.request.user) | Q(est_demo=True)
+        )
     def perform_create(self, serializer):
         serializer.save(proprietaire=self.request.user)
 
