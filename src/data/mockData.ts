@@ -5,6 +5,7 @@ export type CultureType = 'maïs' | 'blé' | 'tomates' | 'pommes de terre' | 'ri
 
 export interface Parcelle {
   id: string;
+  idExterne?: string;
   nom: string;
   surface: number; // en hectares
   typeCulture: CultureType;

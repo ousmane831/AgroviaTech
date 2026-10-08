@@ -1,7 +1,7 @@
 import requests
 import os
 from django.conf import settings
-
+import json
 class GalsenAIModel:
     """Service pour utiliser les modèles GalsenAI via Hugging Face Inference API"""
     

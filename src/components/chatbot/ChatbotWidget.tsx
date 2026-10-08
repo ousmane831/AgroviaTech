@@ -166,13 +166,19 @@ export function ChatbotWidget() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    if (!user) return;
+  
     const loadParcelle = async () => {
       try {
         const parcelles = await fetchParcelles();
   
         if (parcelles.length > 0) {
-          setParcelleId(parcelles[0].id);
+          const id = parcelles[0].idExterne || parcelles[0].id;
+  
+          setParcelleId(id);
+  
           console.log('🌱 Parcelle utilisée par le chatbot :', parcelles[0]);
+          console.log('🌱 parcelleId utilisé :', id);
         }
       } catch (error) {
         console.error('Erreur lors du chargement de la parcelle :', error);
@@ -180,8 +186,7 @@ export function ChatbotWidget() {
     };
   
     void loadParcelle();
-  }, []);
-
+  }, [user]);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -405,20 +410,32 @@ export function ChatbotWidget() {
    */
   const sendVoiceMessage = async (audioFile: File) => {
     setIsLoading(true);
-
+  
     try {
-      console.log("🌱 parcelleId envoyé au chatbot :", parcelleId);
+      let currentParcelleId = parcelleId || 'P001';
+
+setParcelleId(currentParcelleId);
+
+console.log(
+  '🌱 parcelleId envoyé au chatbot :',
+  currentParcelleId
+);
+  
+      console.log(
+        '🌱 parcelleId envoyé au chatbot :',
+        currentParcelleId
+      );
+  
       const response = await chatbotApi.voiceChat({
+        
         audio: audioFile,
         language,
         conversation_id: conversationId || undefined,
-        parcelle_id: parcelleId || undefined,
+        parcelle_id: currentParcelleId || undefined,
       });
+      console.log('🎤 Réponse chatbot vocal :', response);
       setConversationId(response.conversation_id);
-
-      /*
-       * Afficher la transcription de l'utilisateur.
-       */
+  
       const userMessage: Message = {
         id: `voice-user-${Date.now()}`,
         text: response.question || 'Question vocale',
@@ -426,10 +443,7 @@ export function ChatbotWidget() {
         language,
         timestamp: new Date(),
       };
-
-      /*
-       * Afficher la réponse de Sama Agri Voice.
-       */
+  
       const botMessage: Message = {
         id: `voice-bot-${Date.now()}`,
         text: response.message,
@@ -438,19 +452,15 @@ export function ChatbotWidget() {
         timestamp: new Date(),
         audioUrl: response.audio_url || undefined,
       };
-
+  
       setMessages((prev) => [...prev, userMessage, botMessage]);
-
-      /*
-       * Jouer automatiquement l'audio généré par
-       * Sama Agri Voice.
-       */
+  
       if (response.audio_url) {
         await playAudio(response.audio_url);
       }
     } catch (error) {
       console.error('Erreur chatbot vocal:', error);
-
+  
       const errorMessage: Message = {
         id: `voice-error-${Date.now()}`,
         text: 'Désolé, je n\'ai pas pu traiter votre question vocale. Veuillez réessayer.',
@@ -458,13 +468,12 @@ export function ChatbotWidget() {
         language,
         timestamp: new Date(),
       };
-
+  
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
-
   /*
    * LECTURE AUDIO SAMA AGRI VOICE
    */

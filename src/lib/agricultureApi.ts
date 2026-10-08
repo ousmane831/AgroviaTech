@@ -72,11 +72,14 @@ const normalizeQualite = (value?: string): Recolte['qualite'] => {
 
 const normalizeBackendParcelle = (item: any): Parcelle => ({
   id: String(item.id),
+  idExterne: item.id_externe ? String(item.id_externe) : undefined,
   nom: item.nom || 'Parcelle sans nom',
   surface: Number(item.surface || 0),
   typeCulture: normalizeCulture(item.type_culture),
   localisation: item.localisation || 'Localisation non renseignée',
-  dateCreation: item.date_creation ? item.date_creation.split('T')[0] : new Date().toISOString().split('T')[0],
+  dateCreation: item.date_creation
+    ? item.date_creation.split('T')[0]
+    : new Date().toISOString().split('T')[0],
   statut: normalizeStatut(item.statut),
 });
 

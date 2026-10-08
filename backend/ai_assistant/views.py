@@ -139,11 +139,10 @@ class ChatbotViewSet(viewsets.ViewSet):
                             status=status.HTTP_403_FORBIDDEN
                         )
 
-                    if parcelle.est_demo and request.user.role != "admin":
-                        return Response(
-                            {"error": "Accès à la parcelle démo non autorisé."},
-                            status=status.HTTP_403_FORBIDDEN
-                        )
+                    # Les parcelles du dataset sont des parcelles de démonstration
+                    # accessibles au chatbot pour les utilisateurs authentifiés.
+                    if parcelle.est_demo:
+                        pass
 
                     parcelle_context = get_parcelle_context(parcelle)
 
@@ -187,9 +186,9 @@ class ChatbotViewSet(viewsets.ViewSet):
             # un chemin relatif : /audio/reponse_xxx.wav
             if audio_url and audio_url.startswith('/'):
                 agrivoice_url = os.getenv(
-                    'AGRIVOICE_API_URL',
-                    'http://127.0.0.1:8001'
-                )
+                    'AGRIVOICE_PUBLIC_URL',
+                    'https://voice.agroviatechh.com'
+                ).rstrip('/')
                 audio_url = f"{agrivoice_url}{audio_url}"
 
             return Response({

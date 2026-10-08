@@ -16,7 +16,19 @@ class ParcelleSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Parcelle
-        fields = ['id', 'nom', 'type_culture', 'surface', 'localisation', 'statut', 'proprietaire', 'proprietaire_username', 'date_creation', 'date_modification']
+        fields = [
+    'id',
+    'id_externe',
+    'nom',
+    'type_culture',
+    'surface',
+    'localisation',
+    'statut',
+    'proprietaire',
+    'proprietaire_username',
+    'date_creation',
+    'date_modification',
+]
         read_only_fields = ['id', 'date_creation', 'date_modification']
 
 class RecolteSerializer(serializers.ModelSerializer):
