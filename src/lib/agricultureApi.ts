@@ -113,8 +113,15 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 };
 
 export const fetchParcelles = async (): Promise<Parcelle[]> => {
-  const data = await request<any[]>('/parcelles/');
-  return (Array.isArray(data) ? data : []).map(normalizeBackendParcelle);
+  const data = await request<any>('/parcelles/');
+
+  const results = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.results)
+      ? data.results
+      : [];
+
+  return results.map(normalizeBackendParcelle);
 };
 
 export const createParcelle = async (payload: Partial<Parcelle>) => {
