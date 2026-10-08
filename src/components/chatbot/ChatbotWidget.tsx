@@ -412,26 +412,20 @@ export function ChatbotWidget() {
     setIsLoading(true);
   
     try {
-      let currentParcelleId = parcelleId || 'P001';
+      const currentParcelleId = parcelleId || undefined;
 
-setParcelleId(currentParcelleId);
-
-console.log(
-  '🌱 parcelleId envoyé au chatbot :',
-  currentParcelleId
-);
-  
       console.log(
         '🌱 parcelleId envoyé au chatbot :',
-        currentParcelleId
+        currentParcelleId || 'aucune'
       );
   
+      
       const response = await chatbotApi.voiceChat({
         
         audio: audioFile,
         language,
         conversation_id: conversationId || undefined,
-        parcelle_id: currentParcelleId || undefined,
+        parcelle_id: currentParcelleId,
       });
       console.log('🎤 Réponse chatbot vocal :', response);
       setConversationId(response.conversation_id);
