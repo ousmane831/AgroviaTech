@@ -171,6 +171,56 @@ class GalsenAIModel:
                 f"Impossible de contacter Sama Agri Voice pour la "
                 f"transcription : {exc}"
             )
+    
+
+    def synthesize_text(self, text, language):
+        """Envoie un texte déjà formulé à Sama Agri Voice pour TTS uniquement."""
+
+        agrivoice_url = os.getenv(
+            "AGRIVOICE_API_URL",
+            "http://127.0.0.1:8002"
+        ).rstrip("/")
+
+        url = f"{agrivoice_url}/api/v1/agriculture/synthesize"
+
+        language_mapping = {
+            "wo": "wolof",
+            "ff": "pulaar",
+            "sr": "serere",
+        }
+
+        agrivoice_language = language_mapping.get(language)
+
+        if not agrivoice_language:
+            raise ValueError(
+                f"Langue vocale non supportée par Sama Agri Voice : {language}"
+            )
+
+        data = {
+            "text": text,
+            "language": agrivoice_language,
+        }
+
+        try:
+            response = requests.post(
+                url,
+                data=data,
+                timeout=120,
+            )
+
+            if not response.ok:
+                raise Exception(
+                    f"Sama Agri Voice TTS HTTP "
+                    f"{response.status_code}: {response.text}"
+                )
+
+            return response.json()
+
+        except requests.RequestException as exc:
+            raise Exception(
+                f"Impossible de contacter Sama Agri Voice pour le TTS : {exc}"
+            )
+
 
     def respond_text(self, question, language, context=None):
         """Envoie une question texte + contexte agricole à Sama Agri Voice."""

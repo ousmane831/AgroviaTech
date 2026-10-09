@@ -9,3 +9,5 @@ django-filter==23.5
 
 # Hugging Face Inference API (alternative locale plus simple)
 requests>=2.28.0
+
+google-genai>=2.29.0

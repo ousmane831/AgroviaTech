@@ -12,6 +12,14 @@ from agriculture.services import (
     get_parcelle_context,
     resolve_parcelle_from_question,
 )
+
+from .gemini_service import (
+    analyser_intention,
+    formuler_reponse,
+    repondre_conversation,
+)
+from agriculture.services import executer_intention_agricole
+
 class ChatbotViewSet(viewsets.ViewSet):
     """ViewSet pour les opérations du chatbot"""
     
@@ -67,8 +75,27 @@ class ChatbotViewSet(viewsets.ViewSet):
         )
         
         # Générer la réponse du bot
-        bot_response = self.generate_response(message, language, request.user)
         
+        bot_response = self.generate_response(message, language, request.user)
+
+        # Générer l'audio avec le même moteur que le chat vocal.
+        audio_url = None
+        try:
+            resultat_tts = galsen_ai.synthesize_text(bot_response, language)
+            audio_url = resultat_tts.get('audio_url')
+
+            if audio_url and audio_url.startswith('/'):
+                if request.get_host().startswith(('localhost', '127.0.0.1')):
+                    agrivoice_url = 'http://127.0.0.1:8002'
+                else:
+                    agrivoice_url = 'https://voice.agroviatechh.com'
+
+                audio_url = f"{agrivoice_url}{audio_url}"
+        except Exception as e:
+            print(f"Erreur TTS chat écrit : {e}")
+
+
+                
         # Sauvegarder la réponse du bot
         bot_message = Message.objects.create(
             conversation=conversation,
@@ -82,14 +109,17 @@ class ChatbotViewSet(viewsets.ViewSet):
             'message': bot_response,
             'conversation_id': conversation.id,
             'user_message_id': user_message.id,
-            'bot_message_id': bot_message.id
+            'bot_message_id': bot_message.id,
+            'audio_url': audio_url,
         })
 
+    
     @action(detail=False, methods=['post'], url_path='voice-chat')
     def voice_chat(self, request):
-        """Traiter une question vocale avec Sama Agri Voice."""
+        """Question vocale -> Gemini -> données Django -> réponse vocale."""
+
         audio_file = request.FILES.get('audio')
-        language = request.data.get('language', 'fr')
+        language = request.data.get('language', 'wo')
         conversation_id = request.data.get('conversation_id')
 
         if not audio_file:
@@ -99,7 +129,7 @@ class ChatbotViewSet(viewsets.ViewSet):
             )
 
         try:
-            # Récupérer ou créer la conversation
+            # 1. Récupérer ou créer la conversation.
             if conversation_id:
                 try:
                     conversation = Conversation.objects.get(
@@ -116,85 +146,123 @@ class ChatbotViewSet(viewsets.ViewSet):
                     user=request.user,
                     language=language
                 )
-            # Détecter une parcelle mentionnée dans la question transcrite.
-                        # Étape 1 : transcrire l'audio pour connaître la question.
+
+            # 2. Vérifier le fichier audio reçu.
+            print("\n=== DIAGNOSTIC AUDIO ===")
+            print("Nom du fichier :", audio_file.name)
+            print("Type MIME :", audio_file.content_type)
+            print("Taille du fichier :", audio_file.size)
+            print("Langue demandée :", language)
+
+            if audio_file.size == 0:
+                return Response(
+                    {
+                        'error': 'Fichier audio vide',
+                        'detail': 'Le fichier reçu ne contient aucune donnée.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Transcrire l'audio avec Sama Agri Voice / KIRIKU.
             question = galsen_ai.transcribe_audio(
                 audio_file,
                 language
             )
 
-            print("\n=== TRANSCRIPTION ===")
-            print("Question :", question)
-            print("====================\n")
-
-            # Étape 2 : identifier automatiquement la parcelle.
-            # Étape 2 : identifier automatiquement la parcelle.
-            parcelle = resolve_parcelle_from_question(
-                question,
-                request.user
-            )
-
-            # Si la question ne contient pas d'identifiant,
-            # utiliser la parcelle envoyée par le frontend.
-            if not parcelle:
-                parcelle_id = request.data.get("parcelle_id")
-
-                if parcelle_id:
-                    parcelle = Parcelle.objects.filter(
-                        id_externe__iexact=parcelle_id
-                    ).filter(
-                        Q(proprietaire=request.user) | Q(est_demo=True)
-                    ).first()
-
-            if not parcelle:
+            if not question or not question.strip():
                 return Response(
-                    {
-                        "error": "Impossible d'identifier la parcelle.",
-                        "question": question,
-                        "detail": (
-                            "Précisez l'identifiant de la parcelle, "
-                            "par exemple P020 ou parcelle 20."
-                        ),
-                    },
+                    {'error': 'Aucune question n’a été détectée dans l’audio.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            parcelle_id = parcelle.id_externe
+            print("\n=== QUESTION TRANSCRITE ===")
+            print(question)
 
-            print("\n=== PARCELLE IDENTIFIÉE ===")
-            print("Question :", question)
-            print("Parcelle :", parcelle_id)
-            print("Nom :", parcelle.nom)
-            print("===========================\n")
+            # 3. Comprendre l'intention avec Gemini.
+            intention = analyser_intention(question)
 
-            # Étape 3 : vérifier l'accès à la parcelle.
-            if (
-                not parcelle.est_demo
-                and parcelle.proprietaire != request.user
-            ):
-                return Response(
-                    {
-                        "error": "Accès à cette parcelle non autorisé."
-                    },
-                    status=status.HTTP_403_FORBIDDEN
+            print("=== INTENTION GEMINI ===")
+            print(intention.model_dump())
+
+            
+            # 4. Déterminer la langue de réponse.
+            langues = {
+                'wo': 'wolof',
+                'ff': 'pulaar',
+                'sr': 'serere',
+                'fr': 'français',
+            }
+            langue_reponse = langues.get(language, language)
+
+            
+            # 5. Orienter les questions selon leur intention.
+
+            # Intentions qui nécessitent une réponse conversationnelle
+            # et ne nécessitent pas obligatoirement une consultation de la base.
+            intentions_conversationnelles = {
+                'inconnue',
+                'culture',
+            }
+
+            if intention.intent in intentions_conversationnelles:
+
+                answer = repondre_conversation(
+                    question=question,
+                    langue=langue_reponse,
                 )
 
-            # Étape 4 : récupérer les données agricoles.
-            parcelle_context = get_parcelle_context(parcelle)
+                donnees = {
+                    'success': True,
+                    'type': 'conversationnelle',
+                    'source': 'reponse_conversationnelle',
+                    'intent': intention.intent,
+                }
 
-            # Étape 5 : envoyer la question + contexte à Sama Agri Voice.
-            result = galsen_ai.respond_text(
-                question=question,
-                language=language,
-                context=parcelle_context
+                print(
+                    f"=== MODE CONVERSATIONNEL : "
+                    f"{intention.intent} ==="
+                )
+
+            else:
+                # Utiliser la parcelle active du frontend comme solution
+                # de repli, sauf pour les comparaisons.
+
+                if (
+                    not intention.parcelle
+                    and intention.intent not in (
+                        'comparaison_ventes',
+                        'comparaison_recoltes',
+                    )
+                ):
+                    parcelle_frontend = request.data.get('parcelle_id')
+
+                    if parcelle_frontend:
+                        intention.parcelle = parcelle_frontend.strip()
+
+                # Récupérer les données vérifiées depuis PostgreSQL.
+                donnees = executer_intention_agricole(
+                    intention,
+                    request.user
+                )
+
+                print("=== DONNÉES AGRICOLES ===")
+                print(donnees)
+
+                # Formuler la réponse à partir des données reçues.
+                answer = formuler_reponse(
+                    question=question,
+                    langue=langue_reponse,
+                    donnees=donnees
+                )
+
+            # 7. Générer l'audio de la réponse avec KIRIKU TTS.
+            resultat_tts = galsen_ai.synthesize_text(
+                answer,
+                language
             )
-            
-                     # Envoyer l'audio à Sama Agri Voice
-                        # Récupérer la réponse produite par Sama Agri Voice.
-            answer = result.get("answer", "")
-            audio_url = result.get("audio_url")
+            audio_url = resultat_tts.get('audio_url')
 
-            # Sauvegarder la question de l'utilisateur
+            # 8. Enregistrer les messages.
             user_message = Message.objects.create(
                 conversation=conversation,
                 role='user',
@@ -202,7 +270,6 @@ class ChatbotViewSet(viewsets.ViewSet):
                 language=language
             )
 
-            # Sauvegarder la réponse du bot
             bot_message = Message.objects.create(
                 conversation=conversation,
                 role='bot',
@@ -210,8 +277,7 @@ class ChatbotViewSet(viewsets.ViewSet):
                 language=language
             )
 
-            # Sama Agri Voice retourne actuellement
-            # un chemin relatif : /audio/reponse_xxx.wav
+            # 9. Construire l'URL publique de l'audio.
             if audio_url and audio_url.startswith('/'):
                 if request.get_host().startswith(('localhost', '127.0.0.1')):
                     agrivoice_url = 'http://127.0.0.1:8002'
@@ -219,16 +285,20 @@ class ChatbotViewSet(viewsets.ViewSet):
                     agrivoice_url = 'https://voice.agroviatechh.com'
 
                 audio_url = f"{agrivoice_url}{audio_url}"
+
             return Response({
                 'question': question,
                 'message': answer,
                 'audio_url': audio_url,
                 'conversation_id': conversation.id,
                 'user_message_id': user_message.id,
-                'bot_message_id': bot_message.id
+                'bot_message_id': bot_message.id,
+                'intention': intention.model_dump(),
+                'donnees': donnees,
             })
 
         except Exception as e:
+            print(f"Erreur voice_chat : {e}")
             return Response(
                 {
                     'error': 'Erreur lors du traitement vocal',
@@ -236,70 +306,63 @@ class ChatbotViewSet(viewsets.ViewSet):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
+        
     def generate_response(self, user_message, language, user):
-        """Générer une réponse intelligente basée sur le message et le contexte"""
-        # Normaliser le message pour la recherche
-        message_lower = user_message.lower()
-        
-        # Chercher dans les FAQ
-        faqs = FAQ.objects.all()
-        
-        # Recherche de correspondance dans les questions
-        best_match = None
-        best_score = 0
-        
-        for faq in faqs:
-            # Score de similarité simple
-            score = 0
-            question = faq.get_question(language).lower()
-            
-            # Correspondance exacte
-            if question == message_lower:
-                score = 100
-            # Correspondance partielle
-            elif any(word in message_lower for word in question.split()):
-                score = len([word for word in question.split() if word in message_lower]) * 20
-            
-            if score > best_score:
-                best_score = score
-                best_match = faq
-        
-        # Si une FAQ correspond bien, utiliser la réponse
-        if best_match and best_score >= 40:
-            return best_match.get_answer(language)
-        
-        # Sinon, utiliser des réponses basées sur le contexte
-        # Vérifier si l'utilisateur est agriculteur ou visiteur
-        is_farmer = hasattr(user, 'role') and user.role == 'AGRICULTEUR'
-        
-        # Réponses contextuelles basées sur les mots-clés
-        if any(word in message_lower for word in ['alert', 'alerte', 'warning']):
-            if is_farmer:
-                return self.get_farmer_alerts_response(language)
-            else:
-                return self.get_visitor_alerts_response(language)
-        
-        elif any(word in message_lower for word in ['parcelle', 'champ', 'terrain', 'field']):
-            if is_farmer:
-                return self.get_farmer_parcels_response(language)
-            else:
-                return self.get_visitor_parcels_response(language)
-        
-        elif any(word in message_lower for word in ['recolte', 'récolte', 'harvest', 'production']):
-            if is_farmer:
-                return self.get_farmer_harvests_response(language)
-            else:
-                return self.get_visitor_harvests_response(language)
-        
-        elif any(word in message_lower for word in ['marche', 'marché', 'market', 'prix', 'price', 'offre', 'offer']):
-            return self.get_market_response(language)
-        
-        elif any(word in message_lower for word in ['compte', 'profil', 'account', 'profile']):
-            return self.get_account_response(language)
-        
-        # Réponse par défaut
-        return self.get_default_response(language)
+        """Générer une réponse en utilisant le même moteur agricole que le chat vocal."""
+        langues = {
+            'wo': 'wolof',
+            'ff': 'pulaar',
+            'sr': 'serere',
+            'fr': 'français',
+        }
+        langue_reponse = langues.get(language, language)
+
+        # 1. Comprendre la question, comme dans voice_chat().
+        intention = analyser_intention(user_message)
+
+        # 2. Si la question est conversationnelle, chercher une FAQ pertinente,
+        # puis utiliser le moteur conversationnel.
+        if intention.intent == 'inconnue':
+            message_lower = user_message.lower().strip()
+
+            best_match = None
+            best_score = 0
+
+            for faq in FAQ.objects.all():
+                question = faq.get_question(language).lower().strip()
+
+                if question == message_lower:
+                    score = 100
+                else:
+                    mots = [
+                        mot for mot in question.split()
+                        if len(mot) > 3 and mot in message_lower
+                    ]
+                    score = len(mots) * 20
+
+                if score > best_score:
+                    best_score = score
+                    best_match = faq
+
+            if best_match and best_score >= 40:
+                return best_match.get_answer(language)
+
+            return repondre_conversation(
+                question=user_message,
+                langue=langue_reponse,
+            )
+
+        # 3. Exécuter la requête agricole avec les données Django,
+        # comme dans voice_chat().
+        donnees = executer_intention_agricole(intention, user)
+
+        # 4. Formuler la réponse à partir des résultats obtenus.
+        return formuler_reponse(
+            question=user_message,
+            langue=langue_reponse,
+            donnees=donnees,
+        )
+
     
     def get_farmer_alerts_response(self, language):
         responses = {

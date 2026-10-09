@@ -165,3 +165,191 @@ def get_parcelle_context(parcelle):
             ),
         },
     }
+
+
+def executer_intention_agricole(intention, user):
+    """
+    Exécute une intention comprise par Gemini
+    et récupère les vraies données depuis PostgreSQL.
+    """
+
+    from .models import Parcelle
+    from django.db.models import Sum, Avg
+
+    intent = intention.intent
+    parcelle_id = intention.parcelle
+    metric = intention.metric
+
+    parcelles = Parcelle.objects.filter(
+        Q(proprietaire=user) | Q(est_demo=True)
+    )
+
+    # -------------------------------------------------
+    # Une parcelle précise
+    # -------------------------------------------------
+    if parcelle_id:
+        parcelle = parcelles.filter(
+            id_externe__iexact=parcelle_id
+        ).first()
+
+        if not parcelle:
+            return {
+                "success": False,
+                "error": "Parcelle introuvable."
+            }
+
+        if intent == "vente":
+            stats = parcelle.ventes_historiques.aggregate(
+                vendu_total_kg=Sum("vendu_kg")
+            )
+
+            return {
+                "success": True,
+                "intent": intent,
+                "parcelle": parcelle.id_externe,
+                "metric": metric,
+                "value": (
+                    float(stats["vendu_total_kg"])
+                    if stats["vendu_total_kg"] is not None
+                    else 0
+                ),
+            }
+
+        if intent == "recolte":
+            stats = parcelle.ventes_historiques.aggregate(
+                recolte_total_kg=Sum("recolte_kg")
+            )
+
+            return {
+                "success": True,
+                "intent": intent,
+                "parcelle": parcelle.id_externe,
+                "metric": metric,
+                "value": (
+                    float(stats["recolte_total_kg"])
+                    if stats["recolte_total_kg"] is not None
+                    else 0
+                ),
+            }
+
+            
+        if intent == "sol":
+            mesure = parcelle.mesures_sol.order_by("-timestamp").first()
+
+            if not mesure:
+                return {
+                    "success": True,
+                    "intent": intent,
+                    "parcelle": parcelle.id_externe,
+                    "message": "Aucune mesure du sol disponible pour cette parcelle.",
+                }
+
+            return {
+                "success": True,
+                "intent": intent,
+                "parcelle": parcelle.id_externe,
+                "metric": metric,
+                "humidite_sol_pct": (
+                    float(mesure.humidite_sol_pct)
+                    if mesure.humidite_sol_pct is not None else None
+                ),
+                "volume_eau_m3": (
+                    float(mesure.volume_eau_m3)
+                    if mesure.volume_eau_m3 is not None else None
+                ),
+                "date_mesure": mesure.timestamp.isoformat(),
+            }
+
+        if intent == "irrigation":
+            mesure = parcelle.mesures_sol.order_by("-timestamp").first()
+
+            if not mesure:
+                return {
+                    "success": True,
+                    "intent": intent,
+                    "parcelle": parcelle.id_externe,
+                    "message": "Aucune mesure d'irrigation disponible pour cette parcelle.",
+                }
+
+            return {
+                "success": True,
+                "intent": intent,
+                "parcelle": parcelle.id_externe,
+                "metric": metric,
+                "volume_eau_m3": (
+                    float(mesure.volume_eau_m3)
+                    if mesure.volume_eau_m3 is not None else None
+                ),
+                "humidite_sol_pct": (
+                    float(mesure.humidite_sol_pct)
+                    if mesure.humidite_sol_pct is not None else None
+                ),
+                "date_mesure": mesure.timestamp.isoformat(),
+            }
+
+        if intent == "production":
+            stats = parcelle.productions_dataset.aggregate(
+                rendement_moyen=Avg("rendement_estime"),
+                volume_total=Sum("volume_recolte"),
+                cout_total=Sum("couts_production"),
+            )
+
+            return {
+                "success": True,
+                "intent": intent,
+                "parcelle": parcelle.id_externe,
+                "metric": metric,
+                "rendement_moyen": (
+                    float(stats["rendement_moyen"])
+                    if stats["rendement_moyen"] is not None else None
+                ),
+                "volume_total": (
+                    float(stats["volume_total"])
+                    if stats["volume_total"] is not None else None
+                ),
+                "cout_total": (
+                    float(stats["cout_total"])
+                    if stats["cout_total"] is not None else None
+                ),
+            }
+
+    # -------------------------------------------------
+    # Comparaison des ventes
+    # -------------------------------------------------
+    if intent == "comparaison_ventes":
+        resultats = []
+
+        for parcelle in parcelles:
+            stats = parcelle.ventes_historiques.aggregate(
+                vendu_total_kg=Sum("vendu_kg")
+            )
+
+            vendu = stats["vendu_total_kg"]
+
+            if vendu is not None:
+                resultats.append({
+                    "parcelle": parcelle.id_externe,
+                    "nom": parcelle.nom,
+                    "culture": parcelle.culture_dataset,
+                    "vendu_total_kg": float(vendu),
+                })
+
+        resultats.sort(
+            key=lambda x: x["vendu_total_kg"],
+            reverse=True
+        )
+
+        return {
+            "success": True,
+            "intent": intent,
+            "metric": metric,
+            "resultats": resultats,
+            "meilleure_parcelle": (
+                resultats[0] if resultats else None
+            ),
+        }
+
+    return {
+        "success": False,
+        "error": f"Intention non encore supportée : {intent}"
+    }

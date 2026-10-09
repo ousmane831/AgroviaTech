@@ -23,12 +23,16 @@ export interface ChatRequest {
   conversation_id?: number;
 }
 
+
 export interface ChatResponse {
   message: string;
+  audio_url: string | null;
   conversation_id: number;
   user_message_id: number;
   bot_message_id: number;
 }
+
+
 
 export interface VoiceChatRequest {
   audio: File;

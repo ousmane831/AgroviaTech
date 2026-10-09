@@ -219,57 +219,74 @@ export function ChatbotWidget() {
   /*
    * CHAT TEXTE
    */
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || isLoading) return;
 
-    const text = inputText.trim();
+const handleSendMessage = async () => {
+  if (!inputText.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text,
-      sender: 'user',
+  const text = inputText.trim();
+
+  const userMessage: Message = {
+    id: Date.now().toString(),
+    text,
+    sender: 'user',
+    language,
+    timestamp: new Date(),
+  };
+
+  setMessages((prev) => [...prev, userMessage]);
+  setInputText('');
+  setIsLoading(true);
+
+  try {
+    const response = await chatbotApi.chat({
+      message: text,
+      language,
+      conversation_id: conversationId || undefined,
+    });
+
+    setConversationId(response.conversation_id);
+
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      text: response.message,
+      sender: 'bot',
+      language,
+      timestamp: new Date(),
+      audioUrl: response.audio_url || undefined,
+    };
+
+    setMessages((prev) => [...prev, botMessage]);
+
+    if (response.audio_url) {
+      try {
+        await playAudio(response.audio_url);
+      } catch (audioError) {
+        console.error(
+          'Erreur lors de la lecture audio :',
+          audioError
+        );
+      }
+    }
+  } catch (error) {
+    console.error(
+      'Erreur lors de l’envoi du message :',
+      error
+    );
+
+    const errorMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      text: 'Désolé, je n’ai pas pu répondre. Veuillez réessayer.',
+      sender: 'bot',
       language,
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText('');
-    setIsLoading(true);
+    setMessages((prev) => [...prev, errorMessage]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    try {
-      const response = await chatbotApi.chat({
-        message: text,
-        language,
-        conversation_id: conversationId || undefined,
-      });
-
-      setConversationId(response.conversation_id);
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.message,
-        sender: 'bot',
-        language,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error('Erreur chatbot:', error);
-
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'Désolé, je n\'ai pas pu répondre. Veuillez réessayer.',
-        sender: 'bot',
-        language,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   /*
    * DÉMARRER / ARRÊTER L'ENREGISTREMENT
@@ -583,7 +600,7 @@ export function ChatbotWidget() {
 
               <div>
                 <h3 className="text-sm font-semibold text-white">
-                  Assistant AgroviaTech
+                  Assistant AgroviaVoice
                 </h3>
                 <p className="text-xs text-[#f6d98a]">
                   Posez votre question
