@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Mic, Volume2, Send, Square } from 'lucide-react';
+import { X, Mic, Volume2, Send, Square, Play } from 'lucide-react';
 import { chatbotApi } from '@/lib/chatbotApi';
 import { useAuthComplete } from '@/hooks/useAuthComplete';
 import { fetchParcelles } from '@/lib/agricultureApi';
@@ -160,6 +160,7 @@ export function ChatbotWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [parcelleId, setParcelleId] = useState<string | null>(null);
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -275,7 +276,7 @@ const handleSendMessage = async () => {
 
     const errorMessage: Message = {
       id: (Date.now() + 1).toString(),
-      text: 'Désolé, je n’ai pas pu répondre. Veuillez réessayer.',
+      text: 'Veuillez réessayer et assurez vous d\'être connecter.',
       sender: 'bot',
       language,
       timestamp: new Date(),
@@ -465,16 +466,16 @@ const handleSendMessage = async () => {
       };
   
       setMessages((prev) => [...prev, userMessage, botMessage]);
-  
+
       if (response.audio_url) {
-        await playAudio(response.audio_url);
+        await playAudio(response.audio_url, botMessage.id);
       }
     } catch (error) {
       console.error('Erreur chatbot vocal:', error);
   
       const errorMessage: Message = {
         id: `voice-error-${Date.now()}`,
-        text: 'Désolé, je n\'ai pas pu traiter votre question vocale. Veuillez réessayer.',
+        text: 'Veuillez réessayer et rapprochez vous du micro.',
         sender: 'bot',
         language,
         timestamp: new Date(),
@@ -488,7 +489,7 @@ const handleSendMessage = async () => {
   /*
    * LECTURE AUDIO SAMA AGRI VOICE
    */
-  const playAudio = async (url: string) => {
+  const playAudio = async (url: string, messageId?: string) => {
     try {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -499,15 +500,20 @@ const handleSendMessage = async () => {
 
       audioRef.current = audio;
       setIsSpeaking(true);
+      if (messageId) {
+        setPlayingMessageId(messageId);
+      }
 
       audio.onended = () => {
         setIsSpeaking(false);
+        setPlayingMessageId(null);
         audioRef.current = null;
       };
 
       audio.onerror = () => {
         console.error('Impossible de lire l\'audio:', url);
         setIsSpeaking(false);
+        setPlayingMessageId(null);
         audioRef.current = null;
       };
 
@@ -515,6 +521,7 @@ const handleSendMessage = async () => {
     } catch (error) {
       console.error('Erreur lecture audio:', error);
       setIsSpeaking(false);
+      setPlayingMessageId(null);
     }
   };
 
@@ -569,6 +576,7 @@ const handleSendMessage = async () => {
         audioRef.current.pause();
       }
 
+      setPlayingMessageId(null);
       speechSynthesis.cancel();
     };
   }, []);
@@ -658,43 +666,70 @@ const handleSendMessage = async () => {
                     : 'justify-start'
                 }`}
               >
-                <div
-                  className={`max-w-[82%] px-4 py-2.5 ${
-                    message.sender === 'user'
-                      ? 'rounded-2xl rounded-br-md bg-[#2d562b] text-white'
-                      : 'rounded-2xl rounded-bl-md border border-[#e8d9ae] bg-white text-[#2d3a24]'
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed">{message.text}</p>
-
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-[11px] opacity-60">
-                      {new Date(
-                        message.timestamp
-                      ).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-
-                    {message.sender === 'bot' && (
+                {message.sender === 'user' ? (
+                  <div className="max-w-[82%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#008069] text-white">
+                    <p className="text-sm leading-relaxed">{message.text}</p>
+                    <div className="mt-1 flex items-center justify-end gap-2">
+                      <span className="text-[11px] opacity-60">
+                        {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="max-w-[280px] px-3 py-2 rounded-lg bg-[#d9a441] text-white">
+                    <div className="flex items-center gap-2">
                       <Button
                         onClick={() => {
                           if (message.audioUrl) {
-                            playAudio(message.audioUrl);
+                            playAudio(message.audioUrl, message.id);
                           } else {
                             handleVoiceOutput(message.text);
                           }
                         }}
                         variant="ghost"
                         size="icon"
-                        className="h-5 w-5 p-0 text-[#b8923a] opacity-70 hover:bg-transparent hover:opacity-100"
+                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
                       >
-                        <Volume2 className="h-3 w-3" />
+                        {playingMessageId === message.id ? (
+                          <Square className="h-4 w-4 fill-current" />
+                        ) : (
+                          <Play className="h-4 w-4 fill-current" />
+                        )}
                       </Button>
-                    )}
+
+                      <div className="flex-1">
+                        <div className="flex items-end gap-0.5 h-8">
+                          {Array.from({ length: 40 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className={`w-0.5 rounded-full transition-all ${
+                                playingMessageId === message.id
+                                  ? 'bg-white animate-pulse'
+                                  : 'bg-white/40'
+                              }`}
+                              style={{
+                                height: `${20 + Math.random() * 50}%`,
+                                animationDelay: `${i * 0.05}s`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-1 flex items-center justify-end gap-2">
+                      <span className="text-[10px] opacity-70">
+                        {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
 
